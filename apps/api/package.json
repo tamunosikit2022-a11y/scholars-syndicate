@@ -1,0 +1,38 @@
+{
+  "name": "@scholars/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsup",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p .",
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/migrate-cli.ts",
+    "db:reset": "tsx src/db/reset-cli.ts"
+  },
+  "dependencies": {
+    "@scholars/shared": "*",
+    "cors": "2.8.6",
+    "dotenv": "17.4.2",
+    "drizzle-orm": "0.45.3",
+    "express": "5.2.1",
+    "helmet": "8.3.0",
+    "pg": "8.23.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/cors": "2.8.19",
+    "@types/express": "5.0.6",
+    "@types/node": "22.20.4",
+    "@types/pg": "8.23.1",
+    "@types/supertest": "6.0.3",
+    "drizzle-kit": "0.31.11",
+    "supertest": "7.3.0",
+    "tsup": "8.5.1",
+    "tsx": "4.23.15",
+    "vitest": "3.2.7"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "name": "scholars-syndicate",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Scholars Syndicate — a journey guide for students from secondary school to university.",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev -w @scholars/api",
+    "dev:web": "npm run dev -w @scholars/web",
+    "build": "npm run build -w @scholars/api && npm run build -w @scholars/web",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "npm run db:generate -w @scholars/api",
+    "db:migrate": "npm run db:migrate -w @scholars/api",
+    "db:reset": "npm run db:reset -w @scholars/api --"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "eslint": "9.39.5",
+    "eslint-plugin-react-hooks": "5.2.0",
+    "globals": "16.5.0",
+    "prettier": "3.9.9",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.70.1"
+  }
+}

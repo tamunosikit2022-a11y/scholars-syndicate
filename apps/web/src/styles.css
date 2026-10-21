@@ -1,0 +1,125 @@
+/* Mobile-first: written for a ~360px phone, then allowed to grow. */
+:root {
+  --bg: #f6f8fc;
+  --surface: #ffffff;
+  --text: #111827;
+  --muted: #5b6475;
+  --brand: #0b5fff;
+  --ok: #0a7d3b;
+  --warn: #9a5b00;
+  --bad: #b42318;
+  --border: #dde3ee;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e1320;
+    --surface: #161d2e;
+    --text: #eef1f8;
+    --muted: #a3adc2;
+    --brand: #6d9bff;
+    --ok: #4ade80;
+    --warn: #fbbf24;
+    --bad: #f87171;
+    --border: #28324a;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+
+.page {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+}
+
+h1 {
+  margin: 1.5rem 0 0.25rem;
+  font-size: 1.75rem;
+  line-height: 1.2;
+}
+
+.tagline {
+  margin: 0 0 1.5rem;
+  color: var(--muted);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1.25rem;
+}
+
+.card h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.125rem;
+}
+
+.status {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+}
+.status-ok {
+  color: var(--ok);
+}
+.status-warn {
+  color: var(--warn);
+}
+.status-bad {
+  color: var(--bad);
+}
+.status-wait {
+  color: var(--muted);
+}
+
+.meta {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+button {
+  min-height: 44px; /* comfortable touch target */
+  padding: 0.5rem 1.25rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: var(--brand);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  button {
+    transition: transform 0.1s ease;
+  }
+  button:active {
+    transform: scale(0.98);
+  }
+}
