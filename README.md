@@ -27,15 +27,16 @@ before moving on (see "If something goes wrong" at the end).
 
 ## Step 1 — Install Node.js (runs the project)
 
-1. Go to **https://nodejs.org**. Download the **LTS** version (the Windows Installer `.msi`, version 22 or higher).
+1. Go to **https://nodejs.org**. Download the **LTS** version (the Windows Installer `.msi`, version **24 or higher**).
 2. Open the downloaded file. Click **Next** on every screen (leave all options as they are), then **Install**, then **Finish**.
+   If a screen offers to install **"tools for native modules"** (Chocolatey / Visual Studio Build Tools), leave it **unticked** — it downloads several gigabytes and this project does not need it.
 3. Check it worked: press the **Windows key**, type `cmd`, press **Enter**. A black window opens. Type:
    ```
    node -v
    ```
    and press **Enter**.
 
-✅ **You should see** something like `v22.11.0` (any number starting with 22 or higher).
+✅ **You should see** something like `v24.11.0` (any number starting with 24 or higher).
 If it says "'node' is not recognized", close the black window, open a new one and try again; if it still fails, restart the computer.
 
 ## Step 2 — Install PostgreSQL (the database)
@@ -212,5 +213,8 @@ their current terms.
 
 ## Version notes
 
-- `vitest` is pinned to 3.2.7 because newer versions trigger an install bug in npm 10, the npm that
-  ships with Node 22. Revisit when npm is upgraded.
+- **Node 24 or higher is required.** `.nvmrc`, `package.json` and `.npmrc` enforce it, so an older Node
+  stops with a clear message instead of failing in confusing ways. (Older Node versions ship an npm with a
+  bug that breaks installing the current test tool.)
+- The automatic checks (GitHub Actions) also fail if a new **high or critical** security vulnerability
+  appears in the packages we use (`npm audit --audit-level=high`).

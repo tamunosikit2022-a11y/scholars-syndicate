@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Scholars Syndicate — a journey guide for students from secondary school to university.",
+  "description": "Scholars Syndicate \u2014 a journey guide for students from secondary school to university.",
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "workspaces": [
     "apps/*",

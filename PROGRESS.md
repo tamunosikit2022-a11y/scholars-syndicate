@@ -3,87 +3,98 @@
 Keep this file in the project root and commit it. In a new chat: upload the latest project (zip, without
 `node_modules`) and say "continue from PROGRESS.md".
 
+- Repository: private GitHub repo `tamunosikit2022-a11y/scholars-syndicate` (branch `main`).
+- Your setup: Windows laptop, Node 24, PostgreSQL 18 (pgAdmin), project in `C:\Projects\scholars-syndicate`.
+
 ## Working agreement
 
 - Build little by little. Test each step before starting the next.
 - Only do what has been asked. Brainstorm and plan first, no rushing.
-- After every step: files delivered for download, this file updated, you commit to git.
-- A feature is "perfect" only when: it works on a budget Android phone, an iPhone and a laptop;
-  it respects the quality levels; every error case has a clear message; it is tested (automatically
-  and on real devices); it is secure; it is logged here and you have confirmed it.
+- After every step: changed files delivered for download, this file updated, you commit and push to GitHub.
+- A feature is "perfect" only when: it works on a budget Android phone, an iPhone and a laptop; it respects the
+  quality levels; every error case has a clear message; it is tested (automatically and on real devices); it is
+  secure and ergonomic; it is logged here and you have confirmed it.
+- Security: check `npm audit` at the start of every feature. Fix what is necessary. Nothing that touches the live
+  site may have a critical or high vulnerability before launch (CI already fails on any new high/critical).
 
 ## Decisions made
 
-- **Vision:** a journey guide — secondary school → exams (JAMB/WAEC/NECO/Post-UTME) → admission →
-  university. Connects students, teachers, parents and universities. The practice engine is the
-  daily-use core. Teacher and university accounts are new (the old app had student, parent, admin).
-- **Rebuild from scratch** on a newer structure, then bring existing features back one by one,
-  each made perfect before the next (full list of old features: `docs/FEATURES.md`).
+- **Vision:** a journey guide — secondary school → exams (JAMB/WAEC/NECO/Post-UTME) → admission → university.
+  Connects students, teachers, parents and universities. The practice engine is the daily-use core.
+  Teacher and university accounts are new (the old app had student, parent, admin).
+- **Goals:** better, more secure, more solid, very ergonomic.
+- **Rebuild from scratch** on a newer structure, then bring existing features back one by one, each made
+  perfect before the next (full list of old features: `docs/FEATURES.md`).
 - **Everything must be free** (software and, as far as possible, hosting).
 - **Devices:** most students use budget Android phones (Redmi, Tecno, Infinix); some iPhone, iPad, laptop.
-  The site should be very high quality; **users choose their quality level** (e.g. High / Standard /
-  Data saver) with a note that quality depends on their data. **New students see high-quality images
-  by default.** Heavy assets load only when chosen.
-- **Stack:** TypeScript · React + Vite · Node + Express 5 · PostgreSQL + Drizzle (database structure
-  lives in code) · one project holding web/api/shared · Vitest.
-- **Hosting:** not decided yet (nothing in the foundation needs it). Free tiers exist but have limits
-  and rules (some forbid commercial use) — decide before launch.
-- **Before wiping any old database:** the old app's core tables (`students`, `questions`,
-  `exam_sessions` and 11 others) were never defined in its code, so the old database cannot be rebuilt
-  from the old repo. Export its schema/data first if anything in it must be kept.
+  The site should be very high quality; **users choose their quality level** (High / Standard / Data saver) with
+  a note that quality depends on their data. **New students see high-quality images by default.**
+  Heavy assets load only when chosen.
+- **Stack:** TypeScript · React + Vite · Node + Express 5 · PostgreSQL + Drizzle (database structure lives in
+  code) · one project holding web/api/shared · Vitest. **Node 24 or higher is required** (enforced).
+- **Hosting:** not decided yet (nothing so far needs it). Free tiers exist but have limits and rules (some forbid
+  commercial use) — decide before launch.
+- **Old database:** its core tables (`students`, `questions`, `exam_sessions` and 11 others) were never defined in
+  the old code, so it cannot be rebuilt from the old repo. Export its data first if anything must be kept.
 
 ## Step 0 — Look at the old app ✅
 
-Old code reviewed (read-only): backend loads and passes syntax checks; frontend failed to build because
-of one duplicated line in `src/pages/Exam.js` (line 39 repeats line 38). Old code stays as a reference only.
+Old code reviewed (read-only). It stays as a reference only. Everything it did is listed in `docs/FEATURES.md`.
 
-## Step 1 — Foundation ✅ (tested)
+## Step 1 — Foundation ✅ verified in three places
 
-What exists:
+- `apps/api` Express 5 server (validated settings, `/api/health`, security headers, CORS limited to the website,
+  JSON errors that never leak internals, graceful shutdown). `apps/web` mobile-first React page. `packages/shared`
+  holds the health contract. Database structure in code with migrations; `db:reset -- --yes` is dev-only and
+  every test wipe refuses any database not named `*_test`.
 
-- `apps/api`: Express 5 server, validated settings, `/api/health` (reports database up/down), security
-  headers, CORS limited to the website, JSON errors that never leak internals, graceful shutdown.
-- `apps/web`: React page that calls the API and shows connected / database down / cannot reach server,
-  with a retry button. Mobile-first, 44px touch targets, light/dark mode, reduced-motion respected.
-- `packages/shared`: the health response contract used by both sides.
-- Database: schema in code, first migration, `db:migrate`, and `db:reset -- --yes` (dev only; refuses in
-  production; test wipes refuse any database not named `*_test`).
-- Quality gates: `npm run format:check`, `lint`, `typecheck`, `test`, `build`.
+| Check                                                     | My environment                    | Your Windows laptop | GitHub (CI) |
+| --------------------------------------------------------- | --------------------------------- | ------------------- | ----------- |
+| Install from lockfile                                     | ✅                                | ✅                  | ✅          |
+| Format / lint / type check                                | ✅                                | –                   | ✅          |
+| Server tests (real PostgreSQL)                            | 16/16 ✅                          | 16/16 ✅            | ✅          |
+| Website tests                                             | 5/5 ✅                            | 5/5 ✅              | ✅          |
+| Production build                                          | ✅ (first screen ≈ 93 KB gzipped) | –                   | ✅          |
+| Database rebuilt from empty using only migrations         | ✅                                | ✅ (`db:migrate`)   | ✅          |
+| Page shows "Connected — everything is working."           | ✅                                | ✅                  | –           |
+| Database outage → 503 "degraded", then recovers by itself | ✅                                | –                   | –           |
 
-Test results (Linux, Node 22, PostgreSQL 16, clean install from the lockfile):
+## Step 1.1 — Security update ✅ (22 Oct 2026)
 
-| Check                                                                                 | Result                                       |
-| ------------------------------------------------------------------------------------- | -------------------------------------------- |
-| Type check (3 packages)                                                               | 0 errors                                     |
-| Lint / formatting                                                                     | 0 problems                                   |
-| API tests (real PostgreSQL)                                                           | 16 / 16 pass                                 |
-| Web tests                                                                             | 5 / 5 pass                                   |
-| Production build                                                                      | OK — first-screen JavaScript ≈ 93 KB gzipped |
-| Database rebuilt from empty using only migration files                                | ✅                                           |
-| Built server answers requests; web dev proxy works                                    | ✅                                           |
-| Database stopped while API runs → 503 "degraded"; database back → 200 without restart | ✅                                           |
-| Graceful shutdown                                                                     | ✅                                           |
+Vulnerabilities reported by `npm audit`: **8 (2 critical, 1 high, 5 moderate) → 6 (0 critical, 0 high, 6 moderate/low)**.
 
-**NOT tested yet (please check on your side):**
+What changed: `vite` 7.3.6 → **7.3.7** (high-severity fix; 16 days old at the time but the maintainers' own patch,
+published through GitHub's automated build with verified provenance); `vitest` 3.2.7 → **4.1.11** (clears the two
+critical findings). Node 24 now required (`engines`, `.nvmrc`, `.npmrc` `engine-strict`, CI). CI now also runs
+`npm audit --audit-level=high` and fails on any new high/critical finding.
 
-- Running on your Windows laptop (follow README; tell me about any hiccup).
-- The GitHub Actions workflow (`.github/workflows/ci.yml`) — written but never run; confirm the first run is green.
-- Browser-level tests and real phones — my environment cannot download browsers. Open the page on your
-  Redmi/Tecno/Infinix and an iPhone and report what you see.
+Accepted for now (all development tools only — none ships in code that runs on a live site):
 
-Known notes: `vitest` pinned to 3.2.7 (newer one breaks installs on npm 10, the npm shipped with Node 22);
-ESLint 9 shows an "unsupported" notice (ESLint 10 exists) — upgrade later; `drizzle-kit` pulls a deprecated
-dev-only helper — harmless.
+| Finding                                                                                                 | Why it does not matter yet                                                                                       | Revisit                                                                           |
+| ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `vitest` / `@vitest/mocker` (moderate): code injection / path bypass in Vitest's browser/UI mock server | We run `vitest run` in node/jsdom only and never start Vitest's browser or UI server. Fix is `vitest` 4.1.12     | on/after **6 Nov 2026** (when the release is 3 weeks old), or earlier if you want |
+| `esbuild` ≤ 0.24.2 (moderate): any website can query esbuild's own dev server                           | Old copy lives inside drizzle-kit's loader; esbuild's dev server is never started. Fixed by a future drizzle-kit | when drizzle-kit drops `@esbuild-kit/*`                                           |
+| `esbuild` 0.27.x (low): file read via esbuild's dev server on Windows                                   | esbuild's dev server is never started                                                                            | with the next `tsx`/`tsup` update                                                 |
+| `drizzle-kit`, `@esbuild-kit/*` (moderate): inherit the esbuild finding above                           | same                                                                                                             | same                                                                              |
 
-## Next up (to plan together before any code)
+## Open items
+
+- **Check on real phones** (Redmi/Tecno/Infinix + iPhone) — needs the app online first.
+- Choose free hosting before launch.
+- Move to `vitest` 4.1.12 on/after 6 Nov 2026 (see above).
+- ESLint 9 shows an "unsupported" notice (ESLint 10 exists) — upgrade later, not a vulnerability.
+
+## Next up (plan together before any code)
 
 **Feature 1 — Accounts & access** (sign-up, login, email verification, password reset, profile, roles).
-Open questions to decide first: login by email, phone number, or both? Which roles exist at launch
-(student, parent, teacher, university, admin)? How are teachers verified? How is email sent for free?
+Questions to decide first: login by email, phone number, or both? Which roles at launch (student, parent, teacher,
+university, admin)? How are teachers verified? How is email sent for free? How do we handle students under 18
+(consent, parent involvement, data-protection law)?
 
 ## Done log
 
-| Step | What                                               | Tested       | Committed |
-| ---- | -------------------------------------------------- | ------------ | --------- |
-| 0    | Old app review                                     | ✅           | n/a       |
-| 1    | Foundation (api + web + shared + database in code) | ✅ see above | ☐ you     |
+| Step | What                                               | Tested                   | Committed |
+| ---- | -------------------------------------------------- | ------------------------ | --------- |
+| 0    | Old app review                                     | ✅                       | n/a       |
+| 1    | Foundation (api + web + shared + database in code) | ✅ mine, your laptop, CI | ✅ pushed |
+| 1.1  | Security update + Node 24 + audit gate in CI       | ✅ see above             | ☐ you     |
