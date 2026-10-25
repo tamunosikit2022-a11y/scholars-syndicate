@@ -23,6 +23,9 @@ Keep this file in the project root and commit it. In a new chat: upload the late
   Connects students, teachers, parents and universities. The practice engine is the daily-use core.
   Teacher and university accounts are new (the old app had student, parent, admin).
 - **Goals:** better, more secure, more solid, very ergonomic.
+- **Sign-in:** Google (Gmail) only for now — free and password-free. SMS login rejected for cost (see `docs/ACCOUNTS.md`).
+- **Accounts:** student, parent, teacher, school, university, mentor, staff, admin (one login can hold several roles).
+  Launch with student + admin; the rest are added one feature at a time. Full design: `docs/ACCOUNTS.md`.
 - **Rebuild from scratch** on a newer structure, then bring existing features back one by one, each made
   perfect before the next (full list of old features: `docs/FEATURES.md`).
 - **Everything must be free** (software and, as far as possible, hosting).
@@ -77,6 +80,15 @@ Accepted for now (all development tools only — none ships in code that runs on
 | `esbuild` 0.27.x (low): file read via esbuild's dev server on Windows                                   | esbuild's dev server is never started                                                                            | with the next `tsx`/`tsup` update                                                 |
 | `drizzle-kit`, `@esbuild-kit/*` (moderate): inherit the esbuild finding above                           | same                                                                                                             | same                                                                              |
 
+## Step 1.2 — Security update 2 ✅ (24 Oct 2026)
+
+The start-of-feature `npm audit` found **2 new high-severity findings** (published after update 1), both in code that
+runs on a live server: `body-parser` (denial of service via a crafted compressed request, used by Express) and `zod`
+(memory exhaustion when validating oversized collections). Fixed: `zod` 4.6.5 → **4.6.7** and `body-parser` 2.3.0 →
+**2.4.0** (indirect, inside Express's allowed range). Both releases were published through GitHub's automated build with
+verified provenance; `body-parser` 2.4.0 was only 2 days old, accepted because it is the maintainers' own fix for a
+runtime flaw. Result: **0 critical, 0 high, 6 moderate** (unchanged dev-tool findings above).
+
 ## Open items
 
 - **Check on real phones** (Redmi/Tecno/Infinix + iPhone) — needs the app online first.
@@ -84,12 +96,21 @@ Accepted for now (all development tools only — none ships in code that runs on
 - Move to `vitest` 4.1.12 on/after 6 Nov 2026 (see above).
 - ESLint 9 shows an "unsupported" notice (ESLint 10 exists) — upgrade later, not a vulnerability.
 
-## Next up (plan together before any code)
+## Feature 1 — Accounts & access (in progress)
 
-**Feature 1 — Accounts & access** (sign-up, login, email verification, password reset, profile, roles).
-Questions to decide first: login by email, phone number, or both? Which roles at launch (student, parent, teacher,
-university, admin)? How are teachers verified? How is email sent for free? How do we handle students under 18
-(consent, parent involvement, data-protection law)?
+Design and decisions: `docs/ACCOUNTS.md`.
+
+| Step | What                                                                           | Status                                     |
+| ---- | ------------------------------------------------------------------------------ | ------------------------------------------ |
+| 1    | Database: `users`, `user_roles` (+ shared role/level vocabulary, 16 new tests) | ✅ built and tested                        |
+| 2    | Google sign-in on the server                                                   | next (needs a free Google Cloud client ID) |
+| 3    | Sign-in on the website                                                         | –                                          |
+| 4    | Student onboarding (Stage 1, Stage 2)                                          | –                                          |
+| 5    | Roles and route protection                                                     | –                                          |
+| 6    | Account controls (sign out everywhere, export, delete)                         | –                                          |
+
+Open questions for later: how teachers are verified; the under-18 consent / parent flow (check NDPA); free email sending
+for notifications.
 
 ## Done log
 
