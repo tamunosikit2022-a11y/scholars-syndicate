@@ -25,4 +25,21 @@ describe('loadConfig', () => {
   it('rejects an unknown NODE_ENV', () => {
     expect(() => loadConfig({ DATABASE_URL: 'x', NODE_ENV: 'staging' })).toThrow(/NODE_ENV/);
   });
+
+  it('keeps Google sign-in off until a client id is given', () => {
+    expect(loadConfig({ DATABASE_URL: 'x' }).GOOGLE_CLIENT_ID).toBeUndefined();
+    expect(
+      loadConfig({ DATABASE_URL: 'x', GOOGLE_CLIENT_ID: '' }).GOOGLE_CLIENT_ID,
+    ).toBeUndefined();
+    expect(
+      loadConfig({ DATABASE_URL: 'x', GOOGLE_CLIENT_ID: '  abc.apps.googleusercontent.com ' })
+        .GOOGLE_CLIENT_ID,
+    ).toBe('abc.apps.googleusercontent.com');
+  });
+
+  it('reads how many proxies sit in front of the API', () => {
+    expect(loadConfig({ DATABASE_URL: 'x' }).TRUST_PROXY).toBe(0);
+    expect(loadConfig({ DATABASE_URL: 'x', TRUST_PROXY: '1' }).TRUST_PROXY).toBe(1);
+    expect(() => loadConfig({ DATABASE_URL: 'x', TRUST_PROXY: '-1' })).toThrow(/TRUST_PROXY/);
+  });
 });

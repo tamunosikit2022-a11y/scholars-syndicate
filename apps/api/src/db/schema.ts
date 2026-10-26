@@ -105,3 +105,30 @@ export const userRoles = pgTable(
     index('user_roles_role_idx').on(t.role), // "list all teachers" stays fast
   ],
 );
+
+// ───────────────────────── sign-in sessions (Feature 1, step 2) ─────────────────────────
+
+/**
+ * One row per signed-in device. The browser holds a random code; we store only its SHA-256 scramble,
+ * so a leaked database cannot be used to sign in as anyone. Deleting a row signs that device out.
+ */
+export const sessions = pgTable(
+  'sessions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tokenHash: text('token_hash').notNull().unique(),
+    userAgent: text('user_agent'), // browser/device label only; we deliberately do not store IP addresses
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+    lastSeenAt: timestamptz('last_seen_at').notNull().defaultNow(),
+    expiresAt: timestamptz('expires_at').notNull(), // idle expiry: slides forward each time it is used
+    absoluteExpiresAt: timestamptz('absolute_expires_at').notNull(), // hard limit: never moves
+  },
+  (t) => [
+    index('sessions_user_id_idx').on(t.userId), // "sign out everywhere" stays fast
+    index('sessions_expires_at_idx').on(t.expiresAt), // clean-up of expired sessions stays fast
+    check('sessions_expiry_order', sql`${t.expiresAt} <= ${t.absoluteExpiresAt}`),
+  ],
+);
