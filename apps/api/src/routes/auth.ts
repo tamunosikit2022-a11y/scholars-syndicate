@@ -2,6 +2,7 @@ import { Router, type Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import {
   googleSignInRequestSchema,
+  type AuthConfigResponse,
   type MeResponse,
   type PublicUser,
   type Role,
@@ -19,6 +20,8 @@ export interface AuthRouterDeps {
   isProduction: boolean;
   /** Missing until GOOGLE_CLIENT_ID is configured; sign-in then answers "not configured". */
   verifyGoogleToken: GoogleTokenVerifier | undefined;
+  /** Shown to the website so it can render the Google button (not a secret). */
+  googleClientId: string | undefined;
   rateLimit: { windowMs: number; limit: number };
 }
 
@@ -63,6 +66,11 @@ export function authRouter(deps: AuthRouterDeps) {
     handler: (_req, res) => {
       res.status(429).json({ error: 'too_many_requests' });
     },
+  });
+
+  router.get('/config', (_req, res) => {
+    const body: AuthConfigResponse = { googleClientId: deps.googleClientId ?? null };
+    res.json(body);
   });
 
   router.post('/google', signInLimiter, async (req, res) => {

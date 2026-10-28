@@ -16,6 +16,7 @@ const app = createApp({
   corsOrigin: config.CORS_ORIGIN,
   version: VERSION,
   verifyGoogleToken,
+  googleClientId: config.GOOGLE_CLIENT_ID,
   isProduction: config.NODE_ENV === 'production',
   trustProxy: config.TRUST_PROXY,
 });

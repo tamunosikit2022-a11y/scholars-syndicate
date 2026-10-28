@@ -82,10 +82,9 @@ suspended accounts stop working immediately; we deliberately store no IP address
 
 1. **Database: users and roles** — ✅ done (tables `users`, `user_roles`; migration `0001`).
 2. **Google sign-in on the server** — ✅ done (table `sessions`, migration `0002`; tested with a stand-in for Google).
-3. Sign-in on the website (button, stay logged in, log out) — **also where Google is tested for real**.
+3. **Sign-in on the website** — ✅ built (Google button, stay signed in, sign out, plain-language errors). Setup: `docs/GOOGLE_SETUP.md`. Real-Google test: next.
 4. Student onboarding screens (Stage 1, then Stage 2).
 5. Roles and protection (admin role; routes only the right role can open).
 6. Account controls (sign out everywhere, download my data, delete my account).
 
-Needs from you before step 3 can work with real Google: a free Google Cloud project with an OAuth "client ID"
-(I will walk you through it, click by click).
+Google setup is done (see `docs/GOOGLE_SETUP.md`). Add the Client ID to `apps/api/.env` to switch sign-in on.

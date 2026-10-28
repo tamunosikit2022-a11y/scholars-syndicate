@@ -13,6 +13,8 @@ export interface AppDeps {
   version: string;
   /** Omit until Google sign-in is configured. */
   verifyGoogleToken?: GoogleTokenVerifier;
+  /** Google client id handed to the website for the sign-in button. */
+  googleClientId?: string;
   /** Injected in tests so time can be controlled. */
   clock?: () => Date;
   isProduction?: boolean;
@@ -64,6 +66,7 @@ export function createApp(deps: AppDeps) {
       clock,
       isProduction,
       verifyGoogleToken: deps.verifyGoogleToken,
+      googleClientId: deps.googleClientId,
       rateLimit: deps.authRateLimit ?? { windowMs: 10 * 60 * 1000, limit: 100 },
     }),
   );

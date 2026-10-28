@@ -32,6 +32,13 @@ export const signInResponseSchema = z.object({
 });
 export type SignInResponse = z.infer<typeof signInResponseSchema>;
 
+/** GET /api/auth/config — what the website needs to show the Google button. Public by design. */
+export const authConfigResponseSchema = z.object({
+  /** null while Google sign-in is not switched on. A client id is not a secret. */
+  googleClientId: z.string().nullable(),
+});
+export type AuthConfigResponse = z.infer<typeof authConfigResponseSchema>;
+
 export const meResponseSchema = z.object({ user: publicUserSchema });
 export type MeResponse = z.infer<typeof meResponseSchema>;
 

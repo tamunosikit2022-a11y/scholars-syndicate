@@ -123,3 +123,108 @@ button:focus-visible {
     transform: scale(0.98);
   }
 }
+
+/* ───────── Feature 1, step 3: sign-in screens ───────── */
+.page > * + * {
+  margin-top: 1rem;
+}
+
+.card p {
+  margin: 0 0 0.75rem;
+}
+
+.card-quiet {
+  background: transparent;
+}
+
+.card-quiet h2 {
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.alert {
+  margin: 0.75rem 0 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--bad);
+  border-radius: 0.75rem;
+  color: var(--bad);
+  font-weight: 500;
+}
+
+.alert p {
+  margin: 0 0 0.5rem;
+}
+
+.google-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 44px;
+  margin: 1rem 0 0.5rem;
+}
+
+.profile-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.profile-row h2 {
+  margin: 0;
+}
+
+.profile-row .meta {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.avatar {
+  width: 64px;
+  height: 64px;
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-fallback {
+  display: grid;
+  place-items: center;
+  background: var(--brand);
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.badge {
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

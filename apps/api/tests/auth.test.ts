@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
-import { meResponseSchema, signInResponseSchema } from '@scholars/shared';
+import { authConfigResponseSchema, meResponseSchema, signInResponseSchema } from '@scholars/shared';
 import { createApp } from '../src/app';
 import type { GoogleIdentity } from '../src/auth/accounts';
 import {
@@ -408,5 +408,28 @@ describe('deleting an account removes its sessions', () => {
     await signIn(ADA_TOKEN);
     await db.delete(users).where(eq(users.googleSub, 'google-sub-ada'));
     expect(await db.select().from(sessions)).toHaveLength(0);
+  });
+});
+
+describe('GET /api/auth/config', () => {
+  it('tells the website which Google client id to use', async () => {
+    const configured = createApp({
+      db,
+      corsOrigin: ORIGIN,
+      version: 'test',
+      clock,
+      googleClientId: 'abc.apps.googleusercontent.com',
+    });
+    const res = await request(configured).get('/api/auth/config');
+    expect(res.status).toBe(200);
+    expect(authConfigResponseSchema.parse(res.body).googleClientId).toBe(
+      'abc.apps.googleusercontent.com',
+    );
+  });
+
+  it('says null while Google sign-in is not switched on, and needs no sign-in', async () => {
+    const res = await request(app).get('/api/auth/config');
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ googleClientId: null });
   });
 });

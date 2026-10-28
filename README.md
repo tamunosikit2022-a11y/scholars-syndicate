@@ -153,6 +153,11 @@ npm test
 
 ✅ **You should see** `16 passed` (server) and `5 passed` (website).
 
+## Step 9 — Switch on Google sign-in (after the sign-in update)
+
+Follow **`docs/GOOGLE_SETUP.md`**: it shows how to put your Google Client ID in `apps\api\.env`, how to restart, and what
+every error message means.
+
 ## If something goes wrong
 
 | What you see                                                | What it means / what to do                                                                                                         |
