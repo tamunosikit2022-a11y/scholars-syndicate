@@ -91,8 +91,11 @@ runtime flaw. Result: **0 critical, 0 high, 6 moderate** (unchanged dev-tool fin
 
 ## Open items
 
-- **Real Google sign-in is built but not yet tested with a real Google account** — the first job after applying update 4 (`docs/GOOGLE_SETUP.md`).
+- ✅ Real Google sign-in tested on your laptop (Oct 2026).
 - ☐ Retire the first Google client secret: it appeared in a screenshot shared in chat. The app never uses it, so nothing breaks (`docs/GOOGLE_SETUP.md`).
+- **Legal review before launch:** the Terms/Privacy text is a marked draft; a lawyer must review it; publish on public pages.
+- Confirm the minimum age (10) and the under-18 consent method with the legal review.
+- Add display-name moderation (currently only bad characters and team look-alikes are blocked).
 - **Check on real phones** (Redmi/Tecno/Infinix + iPhone) — needs the app online first.
 - Choose free hosting before launch.
 - Move to `vitest` 4.1.12 on/after 6 Nov 2026 (see above).
@@ -102,26 +105,28 @@ runtime flaw. Result: **0 critical, 0 high, 6 moderate** (unchanged dev-tool fin
 
 Design and decisions: `docs/ACCOUNTS.md`.
 
-| Step | What                                                                                           | Status                                         |
-| ---- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| 1    | Database: `users`, `user_roles` (+ shared role/level vocabulary, 16 new tests)                 | ✅ built, tested, pushed                       |
-| 2    | Google sign-in on the server (`sessions` table, 3 endpoints, 30/90-day sessions, 48 new tests) | ✅ built and tested with a stand-in for Google |
-| 3    | Sign-in on the website (Google button, session handling, sign out, 36 website tests)           | ✅ built; real-Google test pending             |
-| 4    | Student onboarding (Stage 1, Stage 2)                                                          | –                                              |
-| 5    | Roles and route protection                                                                     | –                                              |
-| 6    | Account controls (sign out everywhere, export, delete)                                         | –                                              |
+| Step | What                                                                                                                              | Status                                              |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| 1    | Database: `users`, `user_roles` (+ shared role/level vocabulary, 16 new tests)                                                    | ✅ built, tested, pushed                            |
+| 2    | Google sign-in on the server (`sessions` table, 3 endpoints, 30/90-day sessions, 48 new tests)                                    | ✅ built and tested with a stand-in for Google      |
+| 3    | Sign-in on the website (Google button, session handling, sign out, 36 website tests)                                              | ✅ built and tested with real Google on your laptop |
+| 4a   | Student onboarding, Stage 1 essentials (name, date of birth, level, Terms, guardian permission; 23 server + 18 website new tests) | ✅ built and tested; waiting for you to try it      |
+| 4b   | Onboarding Stage 2: personalise your journey (state/school, exams, subjects, courses, study goal, quality level)                  | next                                                |
+| 5    | Roles and route protection                                                                                                        | –                                                   |
+| 6    | Account controls (sign out everywhere, export, delete)                                                                            | –                                                   |
 
 Open questions for later: how teachers are verified; the under-18 consent / parent flow (check NDPA); free email sending
 for notifications.
 
 ## Done log
 
-| Step | What                                               | Tested                                 | Committed |
-| ---- | -------------------------------------------------- | -------------------------------------- | --------- |
-| 0    | Old app review                                     | ✅                                     | n/a       |
-| 1    | Foundation (api + web + shared + database in code) | ✅ mine, your laptop, CI               | ✅ pushed |
-| 1.1  | Security update 1 + Node 24 + audit gate in CI     | ✅ mine, your laptop, CI               | ✅ pushed |
-| 1.2  | Security update 2 (zod, body-parser)               | ✅ mine, your laptop                   | ✅ pushed |
-| F1.1 | Users and roles tables                             | ✅ mine, your laptop                   | ✅ pushed |
-| F1.2 | Google sign-in on the server                       | ✅ mine, your laptop                   | ✅ pushed |
-| F1.3 | Sign-in on the website                             | ✅ 82 server + 36 website tests (mine) | ☐ you     |
+| Step  | What                                               | Tested                                  | Committed              |
+| ----- | -------------------------------------------------- | --------------------------------------- | ---------------------- |
+| 0     | Old app review                                     | ✅                                      | n/a                    |
+| 1     | Foundation (api + web + shared + database in code) | ✅ mine, your laptop, CI                | ✅ pushed              |
+| 1.1   | Security update 1 + Node 24 + audit gate in CI     | ✅ mine, your laptop, CI                | ✅ pushed              |
+| 1.2   | Security update 2 (zod, body-parser)               | ✅ mine, your laptop                    | ✅ pushed              |
+| F1.1  | Users and roles tables                             | ✅ mine, your laptop                    | ✅ pushed              |
+| F1.2  | Google sign-in on the server                       | ✅ mine, your laptop                    | ✅ pushed              |
+| F1.3  | Sign-in on the website                             | ✅ mine + your laptop with real Google  | ☐ you (confirm pushed) |
+| F1.4a | Onboarding Stage 1 (essentials)                    | ✅ 105 server + 54 website tests (mine) | ☐ you                  |

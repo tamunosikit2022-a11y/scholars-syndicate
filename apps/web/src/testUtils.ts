@@ -19,9 +19,12 @@ export const ada: PublicUser = {
   displayName: null,
   avatarUrl: null,
   level: null,
-  onboardingStage: 0,
+  onboardingStage: 1,
   roles: ['student'],
 };
+
+/** Just signed in for the first time: has not answered the onboarding questions yet. */
+export const freshAda: PublicUser = { ...ada, onboardingStage: 0 };
 
 type Handler = () => Response | Promise<Response>;
 

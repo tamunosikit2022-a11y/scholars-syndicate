@@ -26,6 +26,8 @@ interface AuthContextValue {
   signOut(): Promise<boolean>;
   /** Asks the server again who is signed in (used by "Try again"). */
   recheck(): void;
+  /** Replaces the signed-in person's details after the server saved a change (e.g. onboarding). */
+  updateUser(user: PublicUser): void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -72,9 +74,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAttempt((n) => n + 1);
   }, []);
 
+  const updateUser = useCallback((user: PublicUser) => {
+    setState({ kind: 'signedIn', user });
+  }, []);
+
   const value = useMemo(
-    () => ({ state, signIn, signOut, recheck }),
-    [state, signIn, signOut, recheck],
+    () => ({ state, signIn, signOut, recheck, updateUser }),
+    [state, signIn, signOut, recheck, updateUser],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

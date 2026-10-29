@@ -1,4 +1,5 @@
 import { AuthProvider, useAuth } from './auth';
+import { OnboardingCard } from './OnboardingCard';
 import { SignInCard } from './SignInCard';
 import { SystemStatus } from './SystemStatus';
 import { WelcomeCard } from './WelcomeCard';
@@ -30,7 +31,12 @@ function AuthGate() {
     case 'signedOut':
       return <SignInCard />;
     case 'signedIn':
-      return <WelcomeCard user={state.user} />;
+      // Stage 0 = signed in but has not answered the essentials yet.
+      return state.user.onboardingStage < 1 ? (
+        <OnboardingCard user={state.user} />
+      ) : (
+        <WelcomeCard user={state.user} />
+      );
   }
 }
 

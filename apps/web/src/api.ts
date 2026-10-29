@@ -4,6 +4,7 @@ import {
   meResponseSchema,
   signInResponseSchema,
   type AuthConfigResponse,
+  type EssentialsRequest,
   type HealthResponse,
   type MeResponse,
   type SignInResponse,
@@ -15,11 +16,14 @@ const API_URL = import.meta.env.VITE_API_URL ?? '';
 export class ApiError extends Error {
   readonly code: string;
   readonly status: number;
-  constructor(code: string, status: number) {
+  /** For "validation_failed": which form field broke which rule, e.g. { displayName: "too_short" }. */
+  readonly fields: Record<string, string> | undefined;
+  constructor(code: string, status: number, fields?: Record<string, string>) {
     super(code);
     this.name = 'ApiError';
     this.code = code;
     this.status = status;
+    this.fields = fields;
   }
 }
 
@@ -32,7 +36,7 @@ export class NetworkError extends Error {
 }
 
 interface CallOptions {
-  method?: 'GET' | 'POST';
+  method?: 'GET' | 'POST' | 'PUT';
   body?: unknown;
   signal?: AbortSignal;
 }
@@ -56,16 +60,25 @@ async function call(path: string, options: CallOptions = {}): Promise<Response> 
 
 async function errorFrom(res: Response): Promise<ApiError> {
   let code = 'unknown_error';
+  let fields: Record<string, string> | undefined;
   try {
     const body: unknown = await res.json();
     if (typeof body === 'object' && body !== null && 'error' in body) {
       const value = (body as { error: unknown }).error;
       if (typeof value === 'string') code = value;
+      const f = (body as { fields?: unknown }).fields;
+      if (typeof f === 'object' && f !== null) {
+        fields = Object.fromEntries(
+          Object.entries(f).filter(
+            (entry): entry is [string, string] => typeof entry[1] === 'string',
+          ),
+        );
+      }
     }
   } catch {
     /* the body was not JSON; keep the generic code */
   }
-  return new ApiError(code, res.status);
+  return new ApiError(code, res.status, fields);
 }
 
 /**
@@ -101,4 +114,11 @@ export async function signInWithGoogle(idToken: string): Promise<SignInResponse>
 export async function signOutOnServer(): Promise<void> {
   const res = await call('/api/auth/logout', { method: 'POST' });
   if (!res.ok) throw await errorFrom(res);
+}
+
+/** Saves onboarding Stage 1. A rule failure comes back as ApiError("validation_failed") with `fields`. */
+export async function saveEssentials(input: EssentialsRequest): Promise<MeResponse> {
+  const res = await call('/api/me/essentials', { method: 'PUT', body: input });
+  if (!res.ok) throw await errorFrom(res);
+  return meResponseSchema.parse(await res.json());
 }

@@ -5,6 +5,7 @@ import { sameOriginGuard, sessionLoader } from './auth/middleware';
 import type { GoogleTokenVerifier } from './auth/google';
 import type { Db } from './db/client';
 import { authRouter } from './routes/auth';
+import { meRouter } from './routes/me';
 import { healthRouter } from './routes/health';
 
 export interface AppDeps {
@@ -70,6 +71,8 @@ export function createApp(deps: AppDeps) {
       rateLimit: deps.authRateLimit ?? { windowMs: 10 * 60 * 1000, limit: 100 },
     }),
   );
+
+  app.use('/api/me', meRouter({ db: deps.db, clock }));
 
   app.use(notFound);
   app.use(errorHandler);

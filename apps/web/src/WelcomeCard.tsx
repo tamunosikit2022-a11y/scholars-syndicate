@@ -36,6 +36,16 @@ function Avatar({ user }: { user: PublicUser }) {
   );
 }
 
+const LEVEL_LABELS: Record<string, string> = {
+  jss: 'JSS',
+  ss1: 'SS1',
+  ss2: 'SS2',
+  ss3: 'SS3',
+  jamb_candidate: 'JAMB candidate',
+  university_student: 'University student',
+  other: 'Other',
+};
+
 const ROLE_LABELS: Record<string, string> = {
   student: 'Student',
   parent: 'Parent',
@@ -80,7 +90,8 @@ export function WelcomeCard({ user }: { user: PublicUser }) {
         ))}
       </ul>
 
-      <p>You are signed in. Setting up your student profile comes next.</p>
+      {user.level && <p className="meta">Level: {LEVEL_LABELS[user.level]}</p>}
+      <p>Your basics are saved. Next up: personalise your journey (coming soon).</p>
 
       <button type="button" className="btn-secondary" onClick={handleSignOut} disabled={busy}>
         {busy ? 'Signing out…' : 'Sign out'}

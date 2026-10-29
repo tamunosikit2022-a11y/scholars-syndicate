@@ -44,6 +44,15 @@ export function sessionLoader(deps: {
   };
 }
 
+/** Refuses the request unless someone is signed in. */
+export const requireAuth: RequestHandler = (req, res, next) => {
+  if (!req.auth) {
+    res.status(401).json({ error: 'not_signed_in' });
+    return;
+  }
+  next();
+};
+
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 /**

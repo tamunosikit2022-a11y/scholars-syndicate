@@ -54,5 +54,7 @@ export const AUTH_ERROR_CODES = [
   'not_signed_in',
   'forbidden_origin',
   'too_many_requests',
+  'validation_failed',
+  'date_of_birth_locked',
 ] as const;
 export type AuthErrorCode = (typeof AUTH_ERROR_CODES)[number];

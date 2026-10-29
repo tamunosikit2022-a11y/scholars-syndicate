@@ -60,6 +60,8 @@ export const users = pgTable(
     level: userLevel('level'),
     termsAcceptedAt: timestamptz('terms_accepted_at'),
     termsVersion: text('terms_version'),
+    // Set when an under-18 student confirmed that a parent or guardian knows and allows it.
+    guardianConsentAt: timestamptz('guardian_consent_at'),
 
     onboardingStage: integer('onboarding_stage').notNull().default(0),
     status: accountStatus('status').notNull().default('active'),

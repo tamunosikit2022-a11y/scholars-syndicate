@@ -78,12 +78,34 @@ suspended accounts stop working immediately; we deliberately store no IP address
 **Hosting note:** the sign-in cookie only travels between the website and the API when they share one site (for example
 `app.example.com` and `api.example.com`). Keep that in mind when choosing free hosting.
 
+## Stage 1 rules (built in step 4a)
+
+One shared set of rules (`packages/shared/src/onboarding.ts`) is used by the website for instant feedback **and** by the
+server as the final judge, so they can never disagree. Endpoint: `PUT /api/me/essentials` (sign-in required).
+
+| Field         | Rule                                                                                                                                                                                                          |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Display name  | 2–30 characters after tidying spaces; letters (any language), numbers, spaces and `. _ ' -` only; team-like names (admin, support, moderator, official, staff, Scholars Syndicate) are blocked as whole words |
+| Date of birth | A real date; the student must be **10 to 100** years old; set **once** — a later change is refused (`date_of_birth_locked`) because it decides the under-18 rules; never sent back to the website             |
+| Level         | One of JSS, SS1, SS2, SS3, JAMB candidate, university student, other                                                                                                                                          |
+| Terms         | Must be accepted, for the **current version** (`CURRENT_TERMS_VERSION`); the time and version are stored                                                                                                      |
+| Under-18      | A parent/guardian confirmation is required and the time is stored (`guardian_consent_at`); a student is an adult from the day of their 18th birthday                                                          |
+
+Problems come back as `422 validation_failed` with one code per field, which the website turns into plain-language messages
+and focuses the first wrong field. Re-submitting later edits name and level; it never moves the stage backwards and keeps the
+original Terms-acceptance time unless the Terms version changed.
+
+**Before launch (not yet done):** a lawyer must review the Terms/Privacy text (currently a marked DRAFT shown in the form);
+publish them on public pages (Google's app verification needs a privacy policy address); confirm the minimum age (10) and
+the under-18 consent method; add moderation for display names (this version blocks bad characters and team look-alikes only).
+
 ## Build steps for Feature 1
 
 1. **Database: users and roles** — ✅ done (tables `users`, `user_roles`; migration `0001`).
 2. **Google sign-in on the server** — ✅ done (table `sessions`, migration `0002`; tested with a stand-in for Google).
 3. **Sign-in on the website** — ✅ built (Google button, stay signed in, sign out, plain-language errors). Setup: `docs/GOOGLE_SETUP.md`. Real-Google test: next.
-4. Student onboarding screens (Stage 1, then Stage 2).
+4. **Student onboarding** — **4a Stage 1 essentials ✅ built** (display name, date of birth, level, Terms/Privacy, guardian
+   permission for under-18s); **4b Stage 2 "Personalise your journey"** is next.
 5. Roles and protection (admin role; routes only the right role can open).
 6. Account controls (sign out everywhere, download my data, delete my account).
 
