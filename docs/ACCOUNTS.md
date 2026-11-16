@@ -105,8 +105,9 @@ the under-18 consent method; add moderation for display names (this version bloc
 2. **Google sign-in on the server** — ✅ done (table `sessions`, migration `0002`; tested with a stand-in for Google).
 3. **Sign-in on the website** — ✅ built (Google button, stay signed in, sign out, plain-language errors). Setup: `docs/GOOGLE_SETUP.md`. Real-Google test: next.
 4. **Student onboarding** — **4a Stage 1 essentials ✅ built** (display name, date of birth, level, Terms/Privacy, guardian
-   permission for under-18s); **4b Stage 2 "Personalise your journey"** is next.
-5. Roles and protection (admin role; routes only the right role can open).
-6. Account controls (sign out everywhere, download my data, delete my account).
+   permission for under-18s); **4b Stage 2 data/API ✅ built** (private preferences table, GET, partial save, optional completion/skip endpoint, and website API client helpers).
+   Website screens and visual design are still pending. The additive migration has only been exercised by the isolated test suite; it has not been applied to the development or production database.
+5. Roles and protection — student onboarding routes now require the student role; admin and teacher route guards remain for their later features.
+6. Account controls — JSON data export and sign out everywhere are built; account deletion remains pending its confirmation and data-retention rules.
 
 Google setup is done (see `docs/GOOGLE_SETUP.md`). Add the Client ID to `apps/api/.env` to switch sign-in on.

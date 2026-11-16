@@ -5,9 +5,11 @@ import {
   date,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   primaryKey,
+  smallint,
   text,
   timestamp,
   uuid,
@@ -18,7 +20,11 @@ import {
   DISPLAY_NAME_MIN,
   LEVELS,
   ONBOARDING_MAX_STAGE,
+  EXAM_TYPES,
+  QUALITY_LEVELS,
   ROLES,
+  STUDY_TIMES,
+  type ExamPlan,
 } from '@scholars/shared';
 
 /**
@@ -38,6 +44,9 @@ export const appInfo = pgTable('app_info', {
 export const userRole = pgEnum('user_role', ROLES);
 export const userLevel = pgEnum('user_level', LEVELS);
 export const accountStatus = pgEnum('account_status', ACCOUNT_STATUSES);
+export const journeyExamType = pgEnum('journey_exam_type', EXAM_TYPES);
+export const journeyStudyTime = pgEnum('journey_study_time', STUDY_TIMES);
+export const journeyQualityLevel = pgEnum('journey_quality_level', QUALITY_LEVELS);
 
 const timestamptz = (name: string) => timestamp(name, { withTimezone: true });
 
@@ -132,5 +141,48 @@ export const sessions = pgTable(
     index('sessions_user_id_idx').on(t.userId), // "sign out everywhere" stays fast
     index('sessions_expires_at_idx').on(t.expiresAt), // clean-up of expired sessions stays fast
     check('sessions_expiry_order', sql`${t.expiresAt} <= ${t.absoluteExpiresAt}`),
+  ],
+);
+
+// ───────────────────────── student journey (Feature 1, step 4b) ─────────────────────────
+
+/** Private learning preferences. This table is only read and written through the signed-in /me API. */
+export const studentJourney = pgTable(
+  'student_journey',
+  {
+    userId: uuid('user_id')
+      .primaryKey()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    state: text('state'),
+    schoolName: text('school_name'),
+    exams: jsonb('exams').$type<ExamPlan[]>().notNull().default([]),
+    subjects: text('subjects').array().notNull().default([]),
+    courseInterest: text('course_interest'),
+    universityInterests: text('university_interests').array().notNull().default([]),
+    dailyStudyGoalMinutes: smallint('daily_study_goal_minutes'),
+    preferredStudyTime: journeyStudyTime('preferred_study_time'),
+    qualityLevel: journeyQualityLevel('quality_level').notNull().default('high'),
+    completedAt: timestamptz('completed_at'),
+    updatedAt: timestamptz('updated_at')
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [
+    check('student_journey_state_length', sql`${t.state} is null or char_length(${t.state}) <= 50`),
+    check(
+      'student_journey_school_name_length',
+      sql`${t.schoolName} is null or char_length(${t.schoolName}) <= 160`,
+    ),
+    check(
+      'student_journey_course_interest_length',
+      sql`${t.courseInterest} is null or char_length(${t.courseInterest}) <= 120`,
+    ),
+    check(
+      'student_journey_daily_goal_range',
+      sql`${t.dailyStudyGoalMinutes} is null or ${t.dailyStudyGoalMinutes} between 5 and 600`,
+    ),
+    check('student_journey_subject_count', sql`cardinality(${t.subjects}) <= 20`),
+    check('student_journey_university_count', sql`cardinality(${t.universityInterests}) <= 3`),
   ],
 );

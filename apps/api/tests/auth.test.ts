@@ -331,6 +331,36 @@ describe('POST /api/auth/logout', () => {
   });
 });
 
+describe('POST /api/auth/logout-all', () => {
+  it('revokes every device for this person and clears the current cookie', async () => {
+    const phone = tokenFrom(await signIn(ADA_TOKEN));
+    const laptop = tokenFrom(await signIn(ADA_TOKEN));
+    const res = await request(app)
+      .post('/api/auth/logout-all')
+      .set('Cookie', `ss_session=${phone}`);
+    expect(res.status).toBe(204);
+    expect(setCookieOf(res)).toMatch(/^ss_session=;/);
+    expect(await db.select().from(sessions)).toHaveLength(0);
+    expect((await me(phone)).status).toBe(401);
+    expect((await me(laptop)).status).toBe(401);
+  });
+
+  it('does not revoke another person’s sessions', async () => {
+    const ada = tokenFrom(await signIn(ADA_TOKEN));
+    const bola = tokenFrom(await signIn('fake-google-token-for-bola-0002'));
+    const res = await request(app).post('/api/auth/logout-all').set('Cookie', `ss_session=${ada}`);
+    expect(res.status).toBe(204);
+    expect((await me(ada)).status).toBe(401);
+    expect((await me(bola)).status).toBe(200);
+  });
+
+  it('requires a signed-in person', async () => {
+    const res = await request(app).post('/api/auth/logout-all');
+    expect(res.status).toBe(401);
+    expect(res.body).toEqual({ error: 'not_signed_in' });
+  });
+});
+
 describe('protection against other websites and abuse', () => {
   it('blocks state-changing requests that come from another website', async () => {
     const token = tokenFrom(await signIn(ADA_TOKEN));

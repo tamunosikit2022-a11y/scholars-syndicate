@@ -178,6 +178,17 @@ describe('PUT /api/me/essentials', () => {
     expect(after.termsAcceptedAt?.toISOString()).toBe(before.termsAcceptedAt?.toISOString()); // not overwritten
   });
 
+  it('does not lower onboarding progress when essentials are saved again', async () => {
+    const s = await signedInStudent();
+    await s.put(adult);
+    await db.update(users).set({ onboardingStage: 3 }).where(eq(users.id, s.user.id));
+
+    const res = await s.put({ ...adult, displayName: 'Ada Updated' });
+    expect(res.status).toBe(200);
+    expect(res.body.user.onboardingStage).toBe(3);
+    expect((await s.row()).onboardingStage).toBe(3);
+  });
+
   it('is refused when it comes from another website', async () => {
     const s = await signedInStudent();
     const res = await request(app)

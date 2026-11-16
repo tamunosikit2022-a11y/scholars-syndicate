@@ -89,44 +89,60 @@ runs on a live server: `body-parser` (denial of service via a crafted compressed
 verified provenance; `body-parser` 2.4.0 was only 2 days old, accepted because it is the maintainers' own fix for a
 runtime flaw. Result: **0 critical, 0 high, 6 moderate** (unchanged dev-tool findings above).
 
+## Step 1.3 — Development-tool security refresh ✅ (16 Nov 2026)
+
+The current full audit initially reported 13 moderate findings and no high or critical findings; the production-only audit reported **0 vulnerabilities**. Updated Vitest to **4.1.12** in the API and web workspaces and `typescript-eslint` to **8.73.0**, then pinned all esbuild copies to **0.28.2** (a version already used by Vite and tsx). Both full and production-only audits now report **0 vulnerabilities**. `npm run db:generate` still succeeds with no schema changes. Tests, typecheck, lint, formatting and production build pass after the updates. The suggested force-fix was not used.
+
 ## Open items
 
 - ✅ Real Google sign-in tested on your laptop (Oct 2026).
+- ✅ Dependency audit (16 Nov 2026): 0 vulnerabilities in either the full or production dependency tree.
 - ☐ Retire the first Google client secret: it appeared in a screenshot shared in chat. The app never uses it, so nothing breaks (`docs/GOOGLE_SETUP.md`).
 - **Legal review before launch:** the Terms/Privacy text is a marked draft; a lawyer must review it; publish on public pages.
 - Confirm the minimum age (10) and the under-18 consent method with the legal review.
 - Add display-name moderation (currently only bad characters and team look-alikes are blocked).
 - **Check on real phones** (Redmi/Tecno/Infinix + iPhone) — needs the app online first.
 - Choose free hosting before launch.
-- Move to `vitest` 4.1.12 on/after 6 Nov 2026 (see above).
 - ESLint 9 shows an "unsupported" notice (ESLint 10 exists) — upgrade later, not a vulnerability.
 
 ## Feature 1 — Accounts & access (in progress)
 
 Design and decisions: `docs/ACCOUNTS.md`.
 
-| Step | What                                                                                                                              | Status                                              |
-| ---- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| 1    | Database: `users`, `user_roles` (+ shared role/level vocabulary, 16 new tests)                                                    | ✅ built, tested, pushed                            |
-| 2    | Google sign-in on the server (`sessions` table, 3 endpoints, 30/90-day sessions, 48 new tests)                                    | ✅ built and tested with a stand-in for Google      |
-| 3    | Sign-in on the website (Google button, session handling, sign out, 36 website tests)                                              | ✅ built and tested with real Google on your laptop |
-| 4a   | Student onboarding, Stage 1 essentials (name, date of birth, level, Terms, guardian permission; 23 server + 18 website new tests) | ✅ built and tested; waiting for you to try it      |
-| 4b   | Onboarding Stage 2: personalise your journey (state/school, exams, subjects, courses, study goal, quality level)                  | next                                                |
-| 5    | Roles and route protection                                                                                                        | –                                                   |
-| 6    | Account controls (sign out everywhere, export, delete)                                                                            | –                                                   |
+| Step | What                                                                                                                              | Status                                                                          |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| 1    | Database: `users`, `user_roles` (+ shared role/level vocabulary, 16 new tests)                                                    | ✅ built, tested, pushed                                                        |
+| 2    | Google sign-in on the server (`sessions` table, 3 endpoints, 30/90-day sessions, 48 new tests)                                    | ✅ built and tested with a stand-in for Google                                  |
+| 3    | Sign-in on the website (Google button, session handling, sign out, 36 website tests)                                              | ✅ built and tested with real Google on your laptop                             |
+| 4a   | Student onboarding, Stage 1 essentials (name, date of birth, level, Terms, guardian permission; 23 server + 18 website new tests) | ✅ built and tested; waiting for you to try it                                  |
+| 4b   | Onboarding Stage 2: private journey data/API and five-step student wizard                                                         | API/client ✅; screens implemented; visual references and dev migration pending |
+| 5    | Roles and route protection                                                                                                        | student onboarding guard ✅ tested; admin/teacher routes pending                |
+| 6    | Account controls (sign out everywhere, export, delete)                                                                            | export + sign out everywhere ✅ tested; deletion pending                        |
 
 Open questions for later: how teachers are verified; the under-18 consent / parent flow (check NDPA); free email sending
 for notifications.
 
 ## Done log
 
-| Step  | What                                               | Tested                                  | Committed              |
-| ----- | -------------------------------------------------- | --------------------------------------- | ---------------------- |
-| 0     | Old app review                                     | ✅                                      | n/a                    |
-| 1     | Foundation (api + web + shared + database in code) | ✅ mine, your laptop, CI                | ✅ pushed              |
-| 1.1   | Security update 1 + Node 24 + audit gate in CI     | ✅ mine, your laptop, CI                | ✅ pushed              |
-| 1.2   | Security update 2 (zod, body-parser)               | ✅ mine, your laptop                    | ✅ pushed              |
-| F1.1  | Users and roles tables                             | ✅ mine, your laptop                    | ✅ pushed              |
-| F1.2  | Google sign-in on the server                       | ✅ mine, your laptop                    | ✅ pushed              |
-| F1.3  | Sign-in on the website                             | ✅ mine + your laptop with real Google  | ☐ you (confirm pushed) |
-| F1.4a | Onboarding Stage 1 (essentials)                    | ✅ 105 server + 54 website tests (mine) | ☐ you                  |
+| Step   | What                                                  | Tested                                                             | Committed                               |
+| ------ | ----------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------- |
+| 0      | Old app review                                        | ✅                                                                 | n/a                                     |
+| 1      | Foundation (api + web + shared + database in code)    | ✅ mine, your laptop, CI                                           | ✅ pushed                               |
+| 1.1    | Security update 1 + Node 24 + audit gate in CI        | ✅ mine, your laptop, CI                                           | ✅ pushed                               |
+| 1.2    | Security update 2 (zod, body-parser)                  | ✅ mine, your laptop                                               | ✅ pushed                               |
+| 1.3*   | Security refresh: Vitest, TS ESLint, esbuild override | ✅ 120 server + 59 website tests, audit                            | ☐ you                                   |
+| F1.1   | Users and roles tables                                | ✅ mine, your laptop                                               | ✅ pushed                               |
+| F1.2   | Google sign-in on the server                          | ✅ mine, your laptop                                               | ✅ pushed                               |
+| F1.3   | Sign-in on the website                                | ✅ mine + your laptop with real Google                             | ☐ you (confirm pushed)                  |
+| F1.4a  | Onboarding Stage 1 (essentials)                       | ✅ 105 server + 54 website tests (mine)                            | ☐ you                                   |
+| F1.4b* | Stage 2 private journey API/client + five-step wizard | ✅ full suite: 120 API + 59 website tests; typecheck/lint/build ✅ | ☐ dev migration, visual references, you |
+| F1.5*  | Reusable role guard for student onboarding APIs       | ✅ 113 server + 57 website tests (mine)                            | ☐ you                                   |
+| F1.6a* | Account export + sign out everywhere                  | ✅ 118 server + 59 website tests (mine)                            | ☐ you                                   |
+
+`F1.4b*` includes the five-screen onboarding wizard (location/school, exams, subjects, course/university interests, and study routine), partial saves, skip controls, and progress indication. The wizard is routed only to student accounts after Stage 1. The migration was applied by the isolated test suite to `scholars_test`; it has **not** been applied to the development or production database. The user's animation references are still pending, so the current presentation follows the existing simple mobile-first styles and can be restyled when they arrive.
+
+`F1.5*` adds the reusable `requireRole` guard and restricts Stage 1 and Stage 2 onboarding endpoints to accounts with the student role. Admin and teacher route policies remain for their later features.
+
+`F1.6a*` adds a self-service JSON export and sign-out-everywhere endpoint. Account deletion is intentionally still pending because it is destructive and needs the retention and confirmation rules settled first.
+
+Post-implementation review found and fixed a stale-session race that could roll onboarding progress backward. Stage updates now use the database's current value; regression coverage passes.

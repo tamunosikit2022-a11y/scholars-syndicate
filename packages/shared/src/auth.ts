@@ -56,5 +56,7 @@ export const AUTH_ERROR_CODES = [
   'too_many_requests',
   'validation_failed',
   'date_of_birth_locked',
+  'onboarding_not_ready',
+  'role_required',
 ] as const;
 export type AuthErrorCode = (typeof AUTH_ERROR_CODES)[number];

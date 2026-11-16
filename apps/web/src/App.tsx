@@ -1,5 +1,6 @@
 import { AuthProvider, useAuth } from './auth';
 import { OnboardingCard } from './OnboardingCard';
+import { JourneyWizard } from './JourneyWizard';
 import { SignInCard } from './SignInCard';
 import { SystemStatus } from './SystemStatus';
 import { WelcomeCard } from './WelcomeCard';
@@ -32,11 +33,13 @@ function AuthGate() {
       return <SignInCard />;
     case 'signedIn':
       // Stage 0 = signed in but has not answered the essentials yet.
-      return state.user.onboardingStage < 1 ? (
-        <OnboardingCard user={state.user} />
-      ) : (
-        <WelcomeCard user={state.user} />
-      );
+      if (state.user.roles.includes('student') && state.user.onboardingStage < 1) {
+        return <OnboardingCard user={state.user} />;
+      }
+      if (state.user.roles.includes('student') && state.user.onboardingStage < 2) {
+        return <JourneyWizard />;
+      }
+      return <WelcomeCard user={state.user} />;
   }
 }
 

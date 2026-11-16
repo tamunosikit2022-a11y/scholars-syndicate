@@ -18,6 +18,9 @@ const MESSAGES: Record<string, string> = {
   validation_failed: 'Some answers need another look. Check the highlighted fields.',
   date_of_birth_locked:
     'Your date of birth is already saved and cannot be changed here. Please contact support if it is wrong.',
+  onboarding_not_ready:
+    'Please complete your account details before saving your learning preferences.',
+  role_required: 'This part of your account is not available for your current role.',
 };
 
 export function messageForError(code: string): string {
