@@ -23,7 +23,8 @@
     "db:generate": "npm run db:generate -w @scholars/api",
     "db:migrate": "npm run db:migrate -w @scholars/api",
     "db:reset": "npm run db:reset -w @scholars/api --",
-    "questions:validate": "npm run questions:validate -w @scholars/api --"
+    "questions:validate": "npm run questions:validate -w @scholars/api --",
+    "roles:grant": "npm run roles:grant -w @scholars/api --"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

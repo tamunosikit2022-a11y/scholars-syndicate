@@ -6,6 +6,7 @@ import type { GoogleTokenVerifier } from './auth/google';
 import type { Db } from './db/client';
 import { authRouter } from './routes/auth';
 import { meRouter } from './routes/me';
+import { adminRouter, teacherRouter } from './routes/staff';
 import { healthRouter } from './routes/health';
 
 export interface AppDeps {
@@ -73,6 +74,8 @@ export function createApp(deps: AppDeps) {
   );
 
   app.use('/api/me', meRouter({ db: deps.db, clock }));
+  app.use('/api/teacher', teacherRouter());
+  app.use('/api/admin', adminRouter());
 
   app.use(notFound);
   app.use(errorHandler);

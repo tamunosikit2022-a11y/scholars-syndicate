@@ -12,7 +12,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate-cli.ts",
     "db:reset": "tsx src/db/reset-cli.ts",
-    "questions:validate": "tsx scripts/validate-question-bank.ts"
+    "questions:validate": "tsx scripts/validate-question-bank.ts",
+    "roles:grant": "tsx src/auth/roles-cli.ts"
   },
   "dependencies": {
     "@scholars/shared": "*",
