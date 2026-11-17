@@ -43,6 +43,13 @@
       "when": 1794897648208,
       "tag": "0005_small_starjammers",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794917218343,
+      "tag": "0006_far_vargas",
+      "breakpoints": true
     }
   ]
 }

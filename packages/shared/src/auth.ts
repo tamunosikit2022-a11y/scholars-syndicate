@@ -29,6 +29,8 @@ export type PublicUser = z.infer<typeof publicUserSchema>;
 export const signInResponseSchema = z.object({
   user: publicUserSchema,
   isNewUser: z.boolean(),
+  /** Present (true) only when this sign-in cancelled a pending account deletion. */
+  deletionCancelled: z.boolean().optional(),
 });
 export type SignInResponse = z.infer<typeof signInResponseSchema>;
 

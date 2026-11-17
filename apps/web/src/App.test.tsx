@@ -201,13 +201,13 @@ describe('signed in', () => {
     fakeServer(signedInRoutes());
     const { container, unmount } = render(<App />);
     await screen.findByRole('heading', { name: 'Welcome, Ada' });
-    expect(container.querySelector('.avatar-fallback')?.textContent).toBe('AS');
+    expect(container.querySelector('.home-avatar-fallback')?.textContent).toBe('AS');
     unmount();
 
     fakeServer(signedInRoutes({ ...ada, avatarUrl: 'https://example.com/ada.png' }));
     const second = render(<App />);
     await screen.findByRole('heading', { name: 'Welcome, Ada' });
-    const img = second.container.querySelector('img.avatar');
+    const img = second.container.querySelector('img.home-avatar');
     expect(img?.getAttribute('src')).toBe('https://example.com/ada.png');
     expect(img?.getAttribute('referrerpolicy')).toBe('no-referrer');
   });

@@ -1,5 +1,6 @@
 export * from './accounts';
 export * from './account-export';
+export * from './account-deletion';
 export * from './auth';
 export * from './health';
 export * from './onboarding';

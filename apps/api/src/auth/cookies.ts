@@ -1,5 +1,5 @@
 import { parse as parseCookies } from 'cookie';
-import type { CookieOptions, Request } from 'express';
+import type { CookieOptions, Request, Response } from 'express';
 
 export function sessionCookieName(isProduction: boolean): string {
   // "__Host-" makes browsers insist on Secure + no Domain + Path=/, which blocks cookie tricks.
@@ -21,4 +21,14 @@ export function readSessionToken(req: Request, isProduction: boolean): string | 
   if (!header) return null;
   const value = parseCookies(header)[sessionCookieName(isProduction)];
   return typeof value === 'string' && value.length >= 20 && value.length <= 200 ? value : null;
+}
+
+/** Tells the browser to forget the sign-in cookie. */
+export function clearSessionCookie(res: Response, isProduction: boolean): void {
+  res.clearCookie(sessionCookieName(isProduction), {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'lax',
+    path: '/',
+  });
 }

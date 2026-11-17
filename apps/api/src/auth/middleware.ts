@@ -6,6 +6,8 @@ import { findActiveSession, type UserRow } from './sessions';
 
 export interface AuthContext {
   sessionId: string;
+  /** When this device signed in. */
+  sessionCreatedAt: Date;
   user: UserRow;
   roles: Role[];
 }
@@ -31,7 +33,12 @@ export function sessionLoader(deps: {
     if (!token) return next();
     const active = await findActiveSession(deps.db, token, deps.clock());
     if (active) {
-      req.auth = { sessionId: active.sessionId, user: active.user, roles: active.roles };
+      req.auth = {
+        sessionId: active.sessionId,
+        sessionCreatedAt: active.createdAt,
+        user: active.user,
+        roles: active.roles,
+      };
       if (active.refreshed) {
         res.cookie(
           sessionCookieName(deps.isProduction),

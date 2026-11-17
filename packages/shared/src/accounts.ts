@@ -29,7 +29,7 @@ export const LEVELS = [
 ] as const;
 export type Level = (typeof LEVELS)[number];
 
-/** Whether an account may sign in. (Deleting an account removes it completely instead.) */
+/** Whether an account may sign in. (A deleted account is removed completely, after the grace period below.) */
 export const ACCOUNT_STATUSES = ['active', 'suspended'] as const;
 export type AccountStatus = (typeof ACCOUNT_STATUSES)[number];
 
@@ -39,3 +39,11 @@ export const DISPLAY_NAME_MAX = 30;
 
 /** Onboarding stages: 0 = just signed in, 1 = essentials done, 2 = personalised, 3 = fully set up. */
 export const ONBOARDING_MAX_STAGE = 3;
+
+/**
+ * Account deletion: a deletion request locks the account and signs out every device. Signing in again
+ * within this many days cancels it; after that the account and all its data are erased for good.
+ */
+export const DELETION_GRACE_DAYS = 14;
+/** Deleting an account needs a sign-in no older than this (a stolen old session is not enough). */
+export const DELETION_RECENT_SIGN_IN_MINUTES = 10;
