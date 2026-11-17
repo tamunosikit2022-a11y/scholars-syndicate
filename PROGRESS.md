@@ -118,7 +118,7 @@ Design and decisions: `docs/ACCOUNTS.md`.
 | 4a   | Student onboarding, Stage 1 essentials (name, date of birth, level, Terms, guardian permission; 23 server + 18 website new tests) | ✅ built and tested; waiting for you to try it                                             |
 | 4b   | Onboarding Stage 2: private journey data/API and five-step student wizard                                                         | API/client/screens ✅; visual restyle and dev migration pending                            |
 | 5    | Roles and route protection                                                                                                        | student onboarding guard ✅ tested; teacher/admin guards built and tested; screens pending |
-| 6    | Account controls (sign out everywhere, export, delete)                                                                            | export + sign out everywhere ✅ tested; deletion pending                                   |
+| 6    | Account controls (sign out everywhere, export, delete)                                                                            | all three ✅ tested on the server; website screen waits for your design                    |
 
 Open questions for later: how teachers are verified; the under-18 consent / parent flow (check NDPA); free email sending
 for notifications.
@@ -140,6 +140,7 @@ for notifications.
 | F1.5*  | Reusable role guard for student onboarding APIs       | ✅ 113 server + 57 website tests (mine)                            | ☐ you                                   |
 | F1.6a* | Account export + sign out everywhere                  | ✅ 118 server + 59 website tests (mine)                            | ☐ you                                   |
 | F2.1*  | Question bank JSON contract + read-only validator     | schema tests and sample pack added; full checks pending            | ☐ you                                   |
+| F1.6b* | Account deletion — server side only (no website)      | ✅ tests + checks (see notes below)                                | ☐ you (run `npm run db:migrate` first)  |
 
 `F1.4b*` includes the five-screen onboarding wizard (location/school, exams, subjects, course/university interests, and study routine), partial saves, skip controls, and progress indication. The wizard is routed only to student accounts after Stage 1. The migration was applied by the isolated test suite to `scholars_test`; it has **not** been applied to the development or production database. The user's animation references are still pending, so the current presentation follows the existing simple mobile-first styles and can be restyled when they arrive.
 

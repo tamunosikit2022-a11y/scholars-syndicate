@@ -12,6 +12,8 @@ export type UserRow = typeof users.$inferSelect;
 
 export interface ActiveSession {
   sessionId: string;
+  /** When this device signed in (used to demand a recent sign-in for sensitive actions). */
+  createdAt: Date;
   user: UserRow;
   roles: Role[];
   expiresAt: Date;
@@ -80,6 +82,7 @@ export async function findActiveSession(
 
   return {
     sessionId: row.session.id,
+    createdAt: row.session.createdAt,
     user: row.user,
     roles: roleRows.map((r) => r.role),
     expiresAt,

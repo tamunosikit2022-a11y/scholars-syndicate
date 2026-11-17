@@ -1,7 +1,8 @@
+import { createHash } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import type { Role } from '@scholars/shared';
 import type { Db } from '../db/client';
-import { userRoles, users } from '../db/schema';
+import { blockedIdentities, userRoles, users } from '../db/schema';
 import type { UserRow } from './sessions';
 
 /** What Google tells us about a person once their sign-in token is verified. */
@@ -14,9 +15,24 @@ export interface GoogleIdentity {
 }
 
 export type SignInResult =
-  | { kind: 'ok'; user: UserRow; roles: Role[]; isNewUser: boolean }
+  | {
+      kind: 'ok';
+      user: UserRow;
+      roles: Role[];
+      isNewUser: boolean;
+      /** True when this sign-in cancelled a pending account deletion. */
+      deletionCancelled: boolean;
+    }
   | { kind: 'suspended' }
   | { kind: 'email_conflict' };
+
+/**
+ * One-way scramble of a Google id, used only to remember that a suspended person's account was erased
+ * (see `blockedIdentities`). Cannot be turned back into the id, and holds no name or email.
+ */
+export function hashGoogleSub(sub: string): string {
+  return createHash('sha256').update(`google-sub:${sub}`).digest('hex');
+}
 
 function isUniqueViolation(err: unknown): boolean {
   const e = err as { code?: string; cause?: { code?: string } } | null;
@@ -51,6 +67,8 @@ async function signInOnce(db: Db, identity: GoogleIdentity, now: Date): Promise<
         )[0];
         if (!taken) nextEmail = email;
       }
+      // Signing in again during the deletion grace period cancels the deletion.
+      const deletionCancelled = found.deletionRequestedAt !== null;
       const [updated] = await tx
         .update(users)
         .set({
@@ -59,6 +77,7 @@ async function signInOnce(db: Db, identity: GoogleIdentity, now: Date): Promise<
           fullName: identity.name,
           avatarUrl: identity.picture,
           lastLoginAt: now,
+          ...(deletionCancelled ? { deletionRequestedAt: null } : {}),
         })
         .where(eq(users.id, found.id))
         .returning();
@@ -67,8 +86,19 @@ async function signInOnce(db: Db, identity: GoogleIdentity, now: Date): Promise<
         user: updated ?? found,
         roles: await rolesOf(tx, found.id),
         isNewUser: false,
+        deletionCancelled,
       };
     }
+
+    // A suspended person whose account was erased cannot start over with a clean record.
+    const blocked = (
+      await tx
+        .select({ hash: blockedIdentities.googleSubHash })
+        .from(blockedIdentities)
+        .where(eq(blockedIdentities.googleSubHash, hashGoogleSub(identity.sub)))
+        .limit(1)
+    )[0];
+    if (blocked) return { kind: 'suspended' };
 
     const sameEmail = (
       await tx.select({ id: users.id }).from(users).where(eq(users.email, email)).limit(1)
@@ -88,7 +118,13 @@ async function signInOnce(db: Db, identity: GoogleIdentity, now: Date): Promise<
       .returning();
     if (!created) throw new Error('Could not create the user');
     await tx.insert(userRoles).values({ userId: created.id, role: 'student' });
-    return { kind: 'ok', user: created, roles: ['student'], isNewUser: true };
+    return {
+      kind: 'ok',
+      user: created,
+      roles: ['student'],
+      isNewUser: true,
+      deletionCancelled: false,
+    };
   });
 }
 

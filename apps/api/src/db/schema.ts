@@ -79,6 +79,10 @@ export const users = pgTable(
 
     onboardingStage: integer('onboarding_stage').notNull().default(0),
     status: accountStatus('status').notNull().default('active'),
+    // Set when the person asked to delete their account. The account is erased for good once the
+    // grace period (DELETION_GRACE_DAYS) has passed; signing in again before then clears it.
+    // Any future public feature (leaderboards, profiles…) must hide rows where this is not null.
+    deletionRequestedAt: timestamptz('deletion_requested_at'),
 
     createdAt: timestamptz('created_at').notNull().defaultNow(),
     updatedAt: timestamptz('updated_at')
@@ -101,8 +105,19 @@ export const users = pgTable(
       'users_date_of_birth_sane',
       sql`${t.dateOfBirth} is null or ${t.dateOfBirth} >= date '1900-01-01'`,
     ),
+    index('users_deletion_requested_at_idx').on(t.deletionRequestedAt), // the purge job stays fast
   ],
 );
+
+/**
+ * The ONLY thing kept after an account is erased, and only when the account was suspended at that moment:
+ * a one-way scramble of the Google id (no name, no email), so deleting and re-registering cannot be used
+ * to escape a suspension. Mention this in the Privacy text when the lawyer reviews it.
+ */
+export const blockedIdentities = pgTable('blocked_identities', {
+  googleSubHash: text('google_sub_hash').primaryKey(),
+  blockedAt: timestamptz('blocked_at').notNull().defaultNow(),
+});
 
 /** Which roles each person holds. One login can be a student AND a mentor, for example. */
 export const userRoles = pgTable(

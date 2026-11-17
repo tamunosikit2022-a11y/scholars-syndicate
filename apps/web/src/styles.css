@@ -1,28 +1,58 @@
 /* Mobile-first: written for a ~360px phone, then allowed to grow. */
 :root {
-  --bg: #f6f8fc;
+  /* Palette taken from the design reference: royal blue actions, purple banner, soft lavender page. */
+  --bg: #f2f3fb;
   --surface: #ffffff;
-  --text: #111827;
+  --text: #111a3a;
   --muted: #5b6475;
-  --brand: #0b5fff;
+  --brand: #2347e8;
+  --brand-soft: #e8ecff;
+  --banner: #6d2fd9;
   --ok: #0a7d3b;
   --warn: #9a5b00;
   --bad: #b42318;
-  --border: #dde3ee;
+  --border: #dde1f0;
+  --radius-card: 1.25rem;
+  --radius-pill: 999px;
+  --shadow-card: 0 1px 2px rgba(17, 26, 58, 0.06), 0 10px 28px rgba(17, 26, 58, 0.07);
+  /* Icon tiles: a soft background with a strong icon colour (every pair keeps readable contrast). */
+  --tone-blue-bg: #e4eaff;
+  --tone-blue-fg: #2347e8;
+  --tone-pink-bg: #fde4f1;
+  --tone-pink-fg: #b4146d;
+  --tone-orange-bg: #fdeed6;
+  --tone-orange-fg: #a55300;
+  --tone-green-bg: #dcf5e4;
+  --tone-green-fg: #0a7d3b;
+  --tone-purple-bg: #ece3fb;
+  --tone-purple-fg: #5b21b6;
   color-scheme: light dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0e1320;
-    --surface: #161d2e;
-    --text: #eef1f8;
-    --muted: #a3adc2;
-    --brand: #6d9bff;
+    --bg: #0c1022;
+    --surface: #161b36;
+    --text: #eef0ff;
+    --muted: #a8b0cc;
+    --brand: #7f9bff;
+    --brand-soft: #232b55;
+    --banner: #4a259c;
     --ok: #4ade80;
     --warn: #fbbf24;
     --bad: #f87171;
-    --border: #28324a;
+    --border: #2a3160;
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 28px rgba(0, 0, 0, 0.25);
+    --tone-blue-bg: #232b55;
+    --tone-blue-fg: #9db3ff;
+    --tone-pink-bg: #43203a;
+    --tone-pink-fg: #ff9ccf;
+    --tone-orange-bg: #43301a;
+    --tone-orange-fg: #ffc26b;
+    --tone-green-bg: #1b3a2a;
+    --tone-green-fg: #6ee79b;
+    --tone-purple-bg: #32245a;
+    --tone-purple-fg: #c4a8ff;
   }
 }
 
@@ -56,6 +86,7 @@ h1 {
   margin: 1.5rem 0 0.25rem;
   font-size: 1.75rem;
   line-height: 1.2;
+  letter-spacing: -0.015em;
 }
 
 .tagline {
@@ -66,8 +97,9 @@ h1 {
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 1rem;
+  border-radius: var(--radius-card);
   padding: 1.25rem;
+  box-shadow: var(--shadow-card);
 }
 
 .card h2 {
@@ -102,11 +134,11 @@ button {
   min-height: 44px; /* comfortable touch target */
   padding: 0.5rem 1.25rem;
   border: 0;
-  border-radius: 0.75rem;
+  border-radius: 0.85rem;
   background: var(--brand);
   color: #fff;
   font: inherit;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -135,6 +167,8 @@ button:focus-visible {
 
 .card-quiet {
   background: transparent;
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .card-quiet h2 {
@@ -220,8 +254,9 @@ button:focus-visible {
 
 .btn-secondary {
   background: transparent;
-  color: var(--text);
-  border: 1px solid var(--border);
+  color: var(--brand);
+  border: 1.5px solid var(--brand);
+  border-radius: var(--radius-pill);
 }
 
 button:disabled {
@@ -451,4 +486,260 @@ details.legal h3 {
   background: var(--border);
   font-size: 0.85rem;
   font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+  button:not(.btn-secondary):not(.btn-outline):not(.chip-remove) {
+    color: #0c1022;
+  }
+}
+
+/* ───────── Design foundation: the home screen ───────── */
+.btn-outline {
+  background: var(--surface);
+  color: var(--brand);
+  border: 1.5px solid var(--brand);
+  border-radius: var(--radius-pill);
+  padding-inline: 1.5rem;
+}
+
+.page-home {
+  max-width: 30rem;
+  padding: 0 0 max(1rem, env(safe-area-inset-bottom));
+}
+.page-home > .card {
+  margin-inline: 1rem;
+}
+.page-home > .card-quiet {
+  padding-inline: 0; /* the quiet status panel has no box, so its text lines up with the cards */
+}
+
+.home > * + * {
+  margin-top: 1rem;
+}
+.home > .home-progress,
+.home > .home-cards,
+.home > .home-skeleton,
+.home > .home-note {
+  margin-inline: 1rem;
+}
+
+.hero {
+  position: relative;
+  height: 9.5rem;
+  padding: max(1rem, env(safe-area-inset-top)) 1.25rem 0;
+  background-color: var(--banner);
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='24.25'%20height='42.00'%20viewBox='0%200%2024.25%2042.00'%3E%3Cpath%20d='M24.25%207.00%20L24.25%2021.00%20L12.12%2028.00%20L-0.00%2021.00%20L0.00%207.00%20L12.12%200.00%20Z%20M12.12%2028.00%20L12.12%2042.00%20L0.00%2049.00%20L-12.12%2042.00%20L-12.12%2028.00%20L-0.00%2021.00%20Z%20M36.37%2028.00%20L36.37%2042.00%20L24.25%2049.00%20L12.12%2042.00%20L12.12%2028.00%20L24.25%2021.00%20Z'%20fill='none'%20stroke='white'%20stroke-opacity='0.16'%20stroke-width='1.6'/%3E%3C/svg%3E");
+  background-size: 24.25px 42px;
+  border-radius: 0 0 1.75rem 1.75rem;
+  color: #fff;
+}
+.hero-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.home-body {
+  margin-top: 0;
+  padding: 0 1rem; /* same edge as the cards below, so everything lines up */
+}
+.home-body > * + * {
+  margin-top: 0.5rem;
+}
+
+.home-avatar {
+  display: block;
+  width: 92px;
+  height: 92px;
+  position: relative;
+  z-index: 1; /* above the banner, which would otherwise paint over it */
+  margin-top: -46px; /* sits half on the banner, half on the page */
+  border: 4px solid var(--surface);
+  border-radius: 50%;
+  background: var(--surface);
+  object-fit: cover;
+  box-shadow: var(--shadow-card);
+}
+.home-avatar-fallback {
+  display: grid;
+  place-items: center;
+  background: var(--brand);
+  color: #fff;
+  font-size: 1.9rem;
+  font-weight: 800;
+}
+@media (prefers-color-scheme: dark) {
+  .home-avatar-fallback {
+    color: #0c1022;
+  }
+}
+
+.home-body h2 {
+  margin: 0.75rem 0 0;
+  font-size: 1.75rem;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.home-email {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.home-email svg {
+  flex: none;
+}
+
+.home-body .badges {
+  margin: 0.75rem 0 0;
+}
+.badge {
+  background: var(--brand-soft);
+  border-color: transparent;
+  color: var(--brand);
+}
+.badge-level {
+  background: var(--brand);
+  color: #fff;
+}
+@media (prefers-color-scheme: dark) {
+  .badge-level {
+    color: #0c1022;
+  }
+}
+
+.home-body .btn-outline {
+  margin-top: 1rem;
+}
+
+.home-progress {
+  padding: 1.1rem 1.25rem;
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+.home-progress h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  line-height: 1.3;
+}
+.home-progress .meta {
+  margin: 0.25rem 0 0.9rem;
+}
+.progress-track {
+  height: 0.6rem;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--brand-soft);
+}
+.progress-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--brand);
+  min-width: 0.6rem;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .progress-fill {
+    transition: width 0.5s ease;
+  }
+}
+
+.home-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-block: 1rem 0;
+  padding: 0;
+  list-style: none;
+}
+.home-card {
+  padding: 1rem;
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+.home-card:nth-child(5) {
+  grid-column: 1 / -1; /* the odd last card spans the row instead of leaving a gap */
+}
+.home-card h4 {
+  margin: 0.7rem 0 0.15rem;
+  font-size: 0.95rem;
+}
+.card-value {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.card-value-empty {
+  color: var(--muted);
+}
+
+.tile {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 0.8rem;
+}
+.tone-blue {
+  background: var(--tone-blue-bg);
+  color: var(--tone-blue-fg);
+}
+.tone-pink {
+  background: var(--tone-pink-bg);
+  color: var(--tone-pink-fg);
+}
+.tone-orange {
+  background: var(--tone-orange-bg);
+  color: var(--tone-orange-fg);
+}
+.tone-green {
+  background: var(--tone-green-bg);
+  color: var(--tone-green-fg);
+}
+.tone-purple {
+  background: var(--tone-purple-bg);
+  color: var(--tone-purple-fg);
+}
+
+.home-skeleton {
+  height: 7rem;
+  border-radius: var(--radius-card);
+  background: var(--border);
+  opacity: 0.6;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .home-skeleton {
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    50% {
+      opacity: 0.3;
+    }
+  }
+}
+
+.home-note {
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* On a laptop the phone-sized column floats in the middle with a fully rounded banner. */
+@media (min-width: 520px) {
+  .page-home {
+    padding-top: 1.5rem;
+  }
+  .page-home .hero {
+    border-radius: 1.75rem;
+  }
 }

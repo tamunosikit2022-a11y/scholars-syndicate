@@ -99,6 +99,51 @@ original Terms-acceptance time unless the Terms version changed.
 publish them on public pages (Google's app verification needs a privacy policy address); confirm the minimum age (10) and
 the under-18 consent method; add moderation for display names (this version blocks bad characters and team look-alikes only).
 
+## Account deletion (built in step 6, server side)
+
+Decisions made together: a **14-day grace period**, a typed confirmation **plus a recent sign-in**, protection for the
+**last admin**, and a minimal record so a **suspension cannot be escaped** by deleting and re-registering.
+
+**How it works**
+
+1. `POST /api/me/delete` with `{ "confirmation": "DELETE" }` (the person's own email address also works). Needs a sign-in no
+   older than **10 minutes**; otherwise the person must sign in again first.
+2. The account is **locked at once**: `users.deletion_requested_at` is set and **every device is signed out**. Nothing is erased
+   yet. The answer is `202` with `requestedAt` and `scheduledFor` (14 days later), and the sign-in cookie is cleared.
+3. **Changing their mind:** signing in with Google again during the 14 days cancels the deletion. The sign-in answer then carries
+   `deletionCancelled: true` (so the website can say "Welcome back — your deletion was cancelled"). Nothing was lost.
+4. **After 14 days** the housekeeping job (runs at start and every 6 hours, together with the expired-session sweep) erases the
+   account **and everything linked to it** (sessions, roles, journey preferences — all `ON DELETE CASCADE`). It re-checks under
+   a database lock, so a sign-in that lands at the last moment still wins.
+
+| Endpoint              | Success                               | Errors                                                                                                                                                 |
+| --------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `POST /api/me/delete` | `202` `{ requestedAt, scheduledFor }` | `invalid_request` 400 · `not_signed_in` 401 · `recent_sign_in_required` 403 · `confirmation_incorrect` 422 · `last_admin` 409 · `forbidden_origin` 403 |
+
+The deletion-specific codes live in `ACCOUNT_DELETION_ERROR_CODES` (`packages/shared/src/account-deletion.ts`). **They have no
+plain-language messages on the website yet** — add them when the account screen is built.
+
+**Special cases**
+
+- **Last admin:** the only remaining active admin cannot delete themselves. Admins take turns through one database lock, so two
+  admins asking at the same moment cannot both leave. A suspended admin, or one already leaving, does not count as "another admin".
+- **Suspended accounts** cannot sign in, so they cannot ask for deletion. If an admin suspends an account that is already waiting
+  to be erased, it is still erased on schedule, but a **one-way scramble of the Google id** (no name, no email) is kept in
+  `blocked_identities`, so the person cannot register again with a clean record. This is the **only** thing kept after erasure and
+  only for suspended accounts — **tell the lawyer and add it to the Privacy text.**
+- **Under-18s:** same rules for everyone; the guardian-consent record is erased with the account.
+
+**Rules for every future feature (important)**
+
+- Anything public (leaderboards, profiles, "universities can find me") must **hide accounts where `deletion_requested_at` is not
+  null** — a locked account must not appear anywhere.
+- Every new table that points at a person needs a decision when it is created: erased with the account (`ON DELETE CASCADE`, the
+  default choice) or anonymised and kept (and why). Practice results, parent links and mentor data will each need this.
+
+**Question bank (Feature 2) and deletion:** the review tables keep who imported, cleared rights for, edited, approved or rejected
+something as `ON DELETE SET NULL`. So when a teacher or admin account is erased, the questions, packs and edit history stay and
+only the person's name link is removed. This was chosen on purpose (the questions belong to the platform) and is covered by a test.
+
 ## Build steps for Feature 1
 
 1. **Database: users and roles** — ✅ done (tables `users`, `user_roles`; migration `0001`).
@@ -108,6 +153,7 @@ the under-18 consent method; add moderation for display names (this version bloc
    permission for under-18s); **4b Stage 2 data/API ✅ built** (private preferences table, GET, partial save, optional completion/skip endpoint, and website API client helpers).
    The website wizard is implemented with the current simple styles; the final visual restyle awaits the user's animation references. The additive migration has only been exercised by the isolated test suite; it has not been applied to the development or production database.
 5. Roles and protection — student onboarding routes now require the student role; the teacher and admin area guards are built (GET /api/teacher/ping for teachers and admins, GET /api/admin/ping for admins only; 401 when signed out, 403 for the wrong role). Roles can only be granted from the command line with npm run roles:grant -- <email> <role> --yes, and no web endpoint can grant or change roles. Real teacher and admin screens come with their later features.
-6. Account controls — JSON data export and sign out everywhere are built; account deletion remains pending its confirmation and data-retention rules.
+6. Account controls — JSON data export, sign out everywhere and **account deletion (server side)** are built and tested. The website
+   screen for these three is waiting for the owner's design (see "Account deletion" below).
 
 Google setup is done (see `docs/GOOGLE_SETUP.md`). Add the Client ID to `apps/api/.env` to switch sign-in on.

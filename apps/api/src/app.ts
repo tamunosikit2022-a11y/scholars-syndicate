@@ -74,7 +74,7 @@ export function createApp(deps: AppDeps) {
     }),
   );
 
-  app.use('/api/me', meRouter({ db: deps.db, clock }));
+  app.use('/api/me', meRouter({ db: deps.db, clock, isProduction }));
   app.use('/api/teacher', teacherRouter());
   app.use('/api/admin', adminRouter());
   app.use('/api/teacher/questions', teacherQuestionsRouter({ db: deps.db, clock }));

@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { createApp } from './app';
 import { createGoogleVerifier } from './auth/google';
+import { purgeDueDeletions } from './auth/deletion';
 import { deleteExpiredSessions } from './auth/sessions';
 import { loadConfig } from './config';
 import { createDb } from './db/client';
@@ -21,9 +22,10 @@ const app = createApp({
   trustProxy: config.TRUST_PROXY,
 });
 
-// Housekeeping: remove sessions that can never be used again (at start, then every 6 hours).
+// Housekeeping, at start and then every 6 hours: remove sessions that can never be used again, and
+// permanently erase accounts whose deletion grace period is over (counts only; never names or emails).
 const SIX_HOURS = 6 * 60 * 60 * 1000;
-function sweepSessions() {
+function housekeeping() {
   deleteExpiredSessions(db, new Date())
     .then((n) => {
       if (n > 0) console.log(`🧹 Removed ${n} expired session(s)`);
@@ -31,9 +33,17 @@ function sweepSessions() {
     .catch((err: unknown) =>
       console.error('Session clean-up failed:', err instanceof Error ? err.message : err),
     );
+  purgeDueDeletions(db, new Date())
+    .then((n) => {
+      if (n > 0)
+        console.log(`🗑️ Permanently erased ${n} account(s) after the deletion grace period`);
+    })
+    .catch((err: unknown) =>
+      console.error('Account purge failed:', err instanceof Error ? err.message : err),
+    );
 }
-sweepSessions();
-setInterval(sweepSessions, SIX_HOURS).unref();
+housekeeping();
+setInterval(housekeeping, SIX_HOURS).unref();
 
 const server = app.listen(config.PORT, () => {
   console.log(

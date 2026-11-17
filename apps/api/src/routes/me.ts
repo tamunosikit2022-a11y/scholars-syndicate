@@ -2,13 +2,19 @@ import { desc, eq, sql } from 'drizzle-orm';
 import { Router } from 'express';
 import {
   CURRENT_TERMS_VERSION,
+  DELETION_CONFIRM_WORD,
+  DELETION_RECENT_SIGN_IN_MINUTES,
   accountExportSchema,
+  deleteAccountRequestSchema,
+  deleteAccountResponseSchema,
   essentialsRequestSchema,
   journeyRequestSchema,
   journeyResponseSchema,
   validateEssentials,
   type MeResponse,
 } from '@scholars/shared';
+import { clearSessionCookie } from '../auth/cookies';
+import { requestAccountDeletion } from '../auth/deletion';
 import { requireAuth, requireRole } from '../auth/middleware';
 import type { Db } from '../db/client';
 import { sessions, studentJourney, users } from '../db/schema';
@@ -17,6 +23,7 @@ import { toPublicUser } from './auth';
 export interface MeRouterDeps {
   db: Db;
   clock: () => Date;
+  isProduction: boolean;
 }
 
 /** Everything about "me" that needs a signed-in person. */
@@ -100,6 +107,58 @@ export function meRouter(deps: MeRouterDeps) {
     });
     res.set('Content-Disposition', 'attachment; filename="scholars-syndicate-data.json"');
     res.json(body);
+  });
+
+  /**
+   * Asks for the account to be deleted. Needs a sign-in from the last few minutes and a typed confirmation.
+   * The account is locked and every device signed out at once; it is erased for good after the grace
+   * period unless the person signs in again before then.
+   */
+  router.post('/delete', async (req, res) => {
+    const auth = req.auth;
+    if (!auth) {
+      res.status(401).json({ error: 'not_signed_in' });
+      return;
+    }
+
+    const parsed = deleteAccountRequestSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'invalid_request' });
+      return;
+    }
+
+    const now = deps.clock();
+    const signedInFor = now.getTime() - auth.sessionCreatedAt.getTime();
+    if (signedInFor > DELETION_RECENT_SIGN_IN_MINUTES * 60 * 1000) {
+      res.status(403).json({ error: 'recent_sign_in_required' });
+      return;
+    }
+
+    const typed = parsed.data.confirmation.trim();
+    const confirmed = typed === DELETION_CONFIRM_WORD || typed.toLowerCase() === auth.user.email;
+    if (!confirmed) {
+      res.status(422).json({ error: 'confirmation_incorrect' });
+      return;
+    }
+
+    const result = await requestAccountDeletion(
+      deps.db,
+      auth.user.id,
+      auth.roles.includes('admin'),
+      now,
+    );
+    if (result.kind === 'last_admin') {
+      res.status(409).json({ error: 'last_admin' });
+      return;
+    }
+
+    clearSessionCookie(res, deps.isProduction);
+    res.status(202).json(
+      deleteAccountResponseSchema.parse({
+        requestedAt: result.requestedAt.toISOString(),
+        scheduledFor: result.scheduledFor.toISOString(),
+      }),
+    );
   });
 
   /** Onboarding Stage 1: display name, date of birth, level, terms (+ guardian consent for under-18s). */

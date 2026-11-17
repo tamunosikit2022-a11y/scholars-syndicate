@@ -1,4 +1,4 @@
-import { Router, type Response } from 'express';
+import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import {
   googleSignInRequestSchema,
@@ -9,7 +9,12 @@ import {
   type SignInResponse,
 } from '@scholars/shared';
 import { signInWithGoogle } from '../auth/accounts';
-import { readSessionToken, sessionCookieName, sessionCookieOptions } from '../auth/cookies';
+import {
+  clearSessionCookie,
+  readSessionToken,
+  sessionCookieName,
+  sessionCookieOptions,
+} from '../auth/cookies';
 import { GoogleTokenError, GoogleUnavailableError, type GoogleTokenVerifier } from '../auth/google';
 import { createSession, revokeAllSessions, revokeSession, type UserRow } from '../auth/sessions';
 import type { Db } from '../db/client';
@@ -38,15 +43,6 @@ export function toPublicUser(user: UserRow, roles: Role[]): PublicUser {
     onboardingStage: user.onboardingStage,
     roles,
   };
-}
-
-function clearSessionCookie(res: Response, isProduction: boolean) {
-  res.clearCookie(sessionCookieName(isProduction), {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: 'lax',
-    path: '/',
-  });
 }
 
 export function authRouter(deps: AuthRouterDeps) {
@@ -133,6 +129,7 @@ export function authRouter(deps: AuthRouterDeps) {
     const body: SignInResponse = {
       user: toPublicUser(result.user, result.roles),
       isNewUser: result.isNewUser,
+      ...(result.deletionCancelled ? { deletionCancelled: true } : {}),
     };
     res.json(body);
   });
