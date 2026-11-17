@@ -110,15 +110,15 @@ The current full audit initially reported 13 moderate findings and no high or cr
 
 Design and decisions: `docs/ACCOUNTS.md`.
 
-| Step | What                                                                                                                              | Status                                                           |
-| ---- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| 1    | Database: `users`, `user_roles` (+ shared role/level vocabulary, 16 new tests)                                                    | ✅ built, tested, pushed                                         |
-| 2    | Google sign-in on the server (`sessions` table, 3 endpoints, 30/90-day sessions, 48 new tests)                                    | ✅ built and tested with a stand-in for Google                   |
-| 3    | Sign-in on the website (Google button, session handling, sign out, 36 website tests)                                              | ✅ built and tested with real Google on your laptop              |
-| 4a   | Student onboarding, Stage 1 essentials (name, date of birth, level, Terms, guardian permission; 23 server + 18 website new tests) | ✅ built and tested; waiting for you to try it                   |
-| 4b   | Onboarding Stage 2: private journey data/API and five-step student wizard                                                         | API/client/screens ✅; visual restyle and dev migration pending  |
-| 5    | Roles and route protection                                                                                                        | student onboarding guard ✅ tested; admin/teacher routes pending |
-| 6    | Account controls (sign out everywhere, export, delete)                                                                            | export + sign out everywhere ✅ tested; deletion pending         |
+| Step | What                                                                                                                              | Status                                                                                     |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| 1    | Database: `users`, `user_roles` (+ shared role/level vocabulary, 16 new tests)                                                    | ✅ built, tested, pushed                                                                   |
+| 2    | Google sign-in on the server (`sessions` table, 3 endpoints, 30/90-day sessions, 48 new tests)                                    | ✅ built and tested with a stand-in for Google                                             |
+| 3    | Sign-in on the website (Google button, session handling, sign out, 36 website tests)                                              | ✅ built and tested with real Google on your laptop                                        |
+| 4a   | Student onboarding, Stage 1 essentials (name, date of birth, level, Terms, guardian permission; 23 server + 18 website new tests) | ✅ built and tested; waiting for you to try it                                             |
+| 4b   | Onboarding Stage 2: private journey data/API and five-step student wizard                                                         | API/client/screens ✅; visual restyle and dev migration pending                            |
+| 5    | Roles and route protection                                                                                                        | student onboarding guard ✅ tested; teacher/admin guards built and tested; screens pending |
+| 6    | Account controls (sign out everywhere, export, delete)                                                                            | export + sign out everywhere ✅ tested; deletion pending                                   |
 
 Open questions for later: how teachers are verified; the under-18 consent / parent flow (check NDPA); free email sending
 for notifications.
@@ -143,7 +143,9 @@ for notifications.
 
 `F1.4b*` includes the five-screen onboarding wizard (location/school, exams, subjects, course/university interests, and study routine), partial saves, skip controls, and progress indication. The wizard is routed only to student accounts after Stage 1. The migration was applied by the isolated test suite to `scholars_test`; it has **not** been applied to the development or production database. The user's animation references are still pending, so the current presentation follows the existing simple mobile-first styles and can be restyled when they arrive.
 
-`F1.5*` adds the reusable `requireRole` guard and restricts Stage 1 and Stage 2 onboarding endpoints to accounts with the student role. Admin and teacher route policies remain for their later features.
+`F1.5*` adds the reusable `requireRole` guard and restricts Stage 1 and Stage 2 onboarding endpoints to accounts with the student role. Teacher and admin route guards were added afterwards (F1.7*).
+
+`F1.7*` adds `GET /api/teacher/ping` (teachers and admins) and `GET /api/admin/ping` (admins only), returning 401 when signed out and 403 for the wrong role. Roles can only be granted from the command line (`npm run roles:grant -- <email> <role> --yes`); no web endpoint can grant or change roles, and a test confirms a student cannot promote themselves. Tested: 137 server + 59 website tests. The website has no teacher or admin screens yet, so there is no website guard yet.
 
 `F1.6a*` adds a self-service JSON export and sign-out-everywhere endpoint. Account deletion is intentionally still pending because it is destructive and needs the retention and confirmation rules settled first.
 
