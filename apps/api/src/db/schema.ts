@@ -12,6 +12,7 @@ import {
   smallint,
   text,
   timestamp,
+  unique,
   uuid,
 } from 'drizzle-orm/pg-core';
 import {
@@ -22,6 +23,10 @@ import {
   ONBOARDING_MAX_STAGE,
   EXAM_TYPES,
   QUALITY_LEVELS,
+  QUESTION_EXAMS,
+  QUESTION_ORIGINS,
+  QUESTION_RIGHTS,
+  QUESTION_STATUSES,
   ROLES,
   STUDY_TIMES,
   type ExamPlan,
@@ -185,4 +190,99 @@ export const studentJourney = pgTable(
     check('student_journey_subject_count', sql`cardinality(${t.subjects}) <= 20`),
     check('student_journey_university_count', sql`cardinality(${t.universityInterests}) <= 3`),
   ],
+);
+
+// ---------- question bank review (Feature 2, step 1) ----------
+
+const quoted = (values: readonly string[]) => values.map((value) => `'${value}'`).join(', ');
+
+export interface StoredQuestionOption {
+  label: string;
+  text: string;
+}
+
+/** The wording of a question, kept as a revision each time a teacher edits it. */
+export interface QuestionSnapshot {
+  stem: string;
+  options: StoredQuestionOption[];
+  answer: string;
+  explanation: string;
+  topic: string | null;
+  difficulty: number;
+}
+
+/** One imported file of questions, and where its permission to use the material stands. */
+export const questionPacks = pgTable(
+  'question_packs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    title: text('title').notNull(),
+    sourceTitle: text('source_title').notNull(),
+    rights: text('rights').notNull(),
+    rightsEvidence: text('rights_evidence'),
+    importedBy: uuid('imported_by').references(() => users.id, { onDelete: 'set null' }),
+    rightsClearedBy: uuid('rights_cleared_by').references(() => users.id, { onDelete: 'set null' }),
+    rightsClearedAt: timestamptz('rights_cleared_at'),
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+  },
+  (t) => [
+    check('question_packs_rights_valid', sql`${t.rights} in (${sql.raw(quoted(QUESTION_RIGHTS))})`),
+  ],
+);
+
+/** One question. Nothing reaches students unless a teacher approved it AND the pack's rights are known. */
+export const questions = pgTable(
+  'questions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    packId: uuid('pack_id')
+      .notNull()
+      .references(() => questionPacks.id, { onDelete: 'cascade' }),
+    referenceId: text('reference_id').notNull(),
+    exam: text('exam').notNull(),
+    origin: text('origin').notNull(),
+    year: smallint('year'),
+    subject: text('subject').notNull(),
+    topic: text('topic'),
+    stem: text('stem').notNull(),
+    options: jsonb('options').$type<StoredQuestionOption[]>().notNull(),
+    answer: text('answer').notNull(),
+    explanation: text('explanation').notNull(),
+    difficulty: smallint('difficulty').notNull().default(3),
+    sourcePage: integer('source_page').notNull(),
+    status: text('status').notNull().default('pending'),
+    rejectionReason: text('rejection_reason'),
+    reviewedBy: uuid('reviewed_by').references(() => users.id, { onDelete: 'set null' }),
+    reviewedAt: timestamptz('reviewed_at'),
+    // Goes up by one every time a teacher edits the wording; approvals must name the version they read.
+    version: integer('version').notNull().default(1),
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+    updatedAt: timestamptz('updated_at').notNull().defaultNow(),
+  },
+  (t) => [
+    unique('questions_pack_reference_unique').on(t.packId, t.referenceId),
+    index('questions_status_idx').on(t.status, t.createdAt),
+    check('questions_exam_valid', sql`${t.exam} in (${sql.raw(quoted(QUESTION_EXAMS))})`),
+    check('questions_origin_valid', sql`${t.origin} in (${sql.raw(quoted(QUESTION_ORIGINS))})`),
+    check('questions_status_valid', sql`${t.status} in (${sql.raw(quoted(QUESTION_STATUSES))})`),
+    check('questions_difficulty_range', sql`${t.difficulty} between 1 and 5`),
+    check('questions_version_positive', sql`${t.version} >= 1`),
+  ],
+);
+
+/** Edit history: the wording as it was before each edit. */
+export const questionRevisions = pgTable(
+  'question_revisions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    questionId: uuid('question_id')
+      .notNull()
+      .references(() => questions.id, { onDelete: 'cascade' }),
+    version: integer('version').notNull(),
+    snapshot: jsonb('snapshot').$type<QuestionSnapshot>().notNull(),
+    editedBy: uuid('edited_by').references(() => users.id, { onDelete: 'set null' }),
+    note: text('note'),
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+  },
+  (t) => [unique('question_revisions_question_version_unique').on(t.questionId, t.version)],
 );

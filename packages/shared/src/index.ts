@@ -5,3 +5,4 @@ export * from './health';
 export * from './onboarding';
 export * from './journey';
 export * from './question-bank';
+export * from './question-review';

@@ -7,6 +7,7 @@ import type { Db } from './db/client';
 import { authRouter } from './routes/auth';
 import { meRouter } from './routes/me';
 import { adminRouter, teacherRouter } from './routes/staff';
+import { adminQuestionPacksRouter, teacherQuestionsRouter } from './routes/questions';
 import { healthRouter } from './routes/health';
 
 export interface AppDeps {
@@ -76,6 +77,8 @@ export function createApp(deps: AppDeps) {
   app.use('/api/me', meRouter({ db: deps.db, clock }));
   app.use('/api/teacher', teacherRouter());
   app.use('/api/admin', adminRouter());
+  app.use('/api/teacher/questions', teacherQuestionsRouter({ db: deps.db, clock }));
+  app.use('/api/admin/question-packs', adminQuestionPacksRouter({ db: deps.db, clock }));
 
   app.use(notFound);
   app.use(errorHandler);
