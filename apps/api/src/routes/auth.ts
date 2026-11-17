@@ -11,7 +11,7 @@ import {
 import { signInWithGoogle } from '../auth/accounts';
 import { readSessionToken, sessionCookieName, sessionCookieOptions } from '../auth/cookies';
 import { GoogleTokenError, GoogleUnavailableError, type GoogleTokenVerifier } from '../auth/google';
-import { createSession, revokeSession, type UserRow } from '../auth/sessions';
+import { createSession, revokeAllSessions, revokeSession, type UserRow } from '../auth/sessions';
 import type { Db } from '../db/client';
 
 export interface AuthRouterDeps {
@@ -151,6 +151,16 @@ export function authRouter(deps: AuthRouterDeps) {
     if (token) await revokeSession(deps.db, token);
     clearSessionCookie(res, deps.isProduction);
     res.status(204).end(); // always succeeds, even if they were not signed in
+  });
+
+  router.post('/logout-all', async (req, res) => {
+    if (!req.auth) {
+      res.status(401).json({ error: 'not_signed_in' });
+      return;
+    }
+    await revokeAllSessions(deps.db, req.auth.user.id);
+    clearSessionCookie(res, deps.isProduction);
+    res.status(204).end();
   });
 
   return router;

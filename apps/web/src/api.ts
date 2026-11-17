@@ -1,11 +1,16 @@
 import {
   authConfigResponseSchema,
+  accountExportSchema,
   healthResponseSchema,
+  journeyResponseSchema,
   meResponseSchema,
   signInResponseSchema,
   type AuthConfigResponse,
+  type AccountExport,
   type EssentialsRequest,
   type HealthResponse,
+  type JourneyRequest,
+  type JourneyResponse,
   type MeResponse,
   type SignInResponse,
 } from '@scholars/shared';
@@ -116,9 +121,43 @@ export async function signOutOnServer(): Promise<void> {
   if (!res.ok) throw await errorFrom(res);
 }
 
+/** Signs out every active device for this account. */
+export async function signOutEverywhere(): Promise<void> {
+  const res = await call('/api/auth/logout-all', { method: 'POST' });
+  if (!res.ok) throw await errorFrom(res);
+}
+
+/** Requests a validated copy of the signed-in person's account data. */
+export async function exportMyData(): Promise<AccountExport> {
+  const res = await call('/api/me/export');
+  if (!res.ok) throw await errorFrom(res);
+  return accountExportSchema.parse(await res.json());
+}
+
 /** Saves onboarding Stage 1. A rule failure comes back as ApiError("validation_failed") with `fields`. */
 export async function saveEssentials(input: EssentialsRequest): Promise<MeResponse> {
   const res = await call('/api/me/essentials', { method: 'PUT', body: input });
   if (!res.ok) throw await errorFrom(res);
   return meResponseSchema.parse(await res.json());
+}
+
+/** Reads the signed-in student's private Stage 2 preferences. */
+export async function getJourney(signal?: AbortSignal): Promise<JourneyResponse> {
+  const res = await call('/api/me/journey', { signal });
+  if (!res.ok) throw await errorFrom(res);
+  return journeyResponseSchema.parse(await res.json());
+}
+
+/** Partially saves Stage 2 so each screen can persist without overwriting other answers. */
+export async function saveJourney(input: JourneyRequest): Promise<JourneyResponse> {
+  const res = await call('/api/me/journey', { method: 'PUT', body: input });
+  if (!res.ok) throw await errorFrom(res);
+  return journeyResponseSchema.parse(await res.json());
+}
+
+/** Finishes or skips Stage 2. Refresh /api/auth/me afterwards to update onboarding routing. */
+export async function completeJourney(): Promise<JourneyResponse> {
+  const res = await call('/api/me/journey/complete', { method: 'POST' });
+  if (!res.ok) throw await errorFrom(res);
+  return journeyResponseSchema.parse(await res.json());
 }

@@ -19,7 +19,7 @@ export const ada: PublicUser = {
   displayName: null,
   avatarUrl: null,
   level: null,
-  onboardingStage: 1,
+  onboardingStage: 2,
   roles: ['student'],
 };
 

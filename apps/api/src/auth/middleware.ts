@@ -53,6 +53,21 @@ export const requireAuth: RequestHandler = (req, res, next) => {
   next();
 };
 
+/** Refuses access unless the signed-in person holds at least one of the listed roles. */
+export function requireRole(...allowedRoles: [Role, ...Role[]]): RequestHandler {
+  return (req, res, next) => {
+    if (!req.auth) {
+      res.status(401).json({ error: 'not_signed_in' });
+      return;
+    }
+    if (!req.auth.roles.some((role) => allowedRoles.includes(role))) {
+      res.status(403).json({ error: 'role_required' });
+      return;
+    }
+    next();
+  };
+}
+
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 /**

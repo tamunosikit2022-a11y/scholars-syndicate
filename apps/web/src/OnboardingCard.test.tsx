@@ -30,6 +30,21 @@ function server(extra: Record<string, () => Response | Promise<Response>> = {}) 
   return fakeServer({
     'GET /api/auth/me': () => json({ user: freshAda }),
     'GET /api/health': () => json(health('up')),
+    'GET /api/me/journey': () =>
+      json({
+        journey: {
+          state: null,
+          schoolName: null,
+          exams: [],
+          subjects: [],
+          courseInterest: null,
+          universityInterests: [],
+          dailyStudyGoalMinutes: null,
+          preferredStudyTime: null,
+          qualityLevel: 'high',
+          completedAt: null,
+        },
+      }),
     [PUT]: () => json({ user: savedUser }),
     ...extra,
   });
@@ -160,7 +175,7 @@ describe('under-18 students', () => {
 
     fireEvent.click(screen.getByLabelText(/parent or guardian knows/));
     submit();
-    await screen.findByRole('heading', { name: 'Welcome, Ada' });
+    await screen.findByRole('heading', { name: 'Personalise your journey' });
     expect(putBody(fn)).toMatchObject({
       dateOfBirth: '2010-05-17',
       level: 'ss3',
@@ -183,14 +198,13 @@ describe('under-18 students', () => {
 });
 
 describe('saving', () => {
-  it('sends the tidied answers and then shows the welcome screen', async () => {
+  it('sends the tidied answers and then opens Stage 2', async () => {
     const fn = server();
     await fillAdultForm();
     fireEvent.change(screen.getByLabelText('Display name'), { target: { value: '  Ada    O. ' } });
     submit();
 
-    expect(await screen.findByRole('heading', { name: 'Welcome, Ada' })).toBeTruthy();
-    expect(screen.getByText('Level: JAMB candidate')).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Personalise your journey' })).toBeTruthy();
     expect(putBody(fn)).toEqual({
       displayName: 'Ada O.',
       dateOfBirth: '2000-05-17',
@@ -210,7 +224,7 @@ describe('saving', () => {
     const button = (await screen.findByRole('button', { name: 'Saving…' })) as HTMLButtonElement;
     expect(button.disabled).toBe(true);
     finish(json({ user: savedUser }));
-    await screen.findByRole('heading', { name: 'Welcome, Ada' });
+    await screen.findByRole('heading', { name: 'Personalise your journey' });
     expect(fn.mock.calls.filter(([, init]) => init?.method === 'PUT')).toHaveLength(1);
   });
 

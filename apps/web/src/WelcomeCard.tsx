@@ -91,7 +91,7 @@ export function WelcomeCard({ user }: { user: PublicUser }) {
       </ul>
 
       {user.level && <p className="meta">Level: {LEVEL_LABELS[user.level]}</p>}
-      <p>Your basics are saved. Next up: personalise your journey (coming soon).</p>
+      <p>Your learning profile is saved. More learning features are on the way.</p>
 
       <button type="button" className="btn-secondary" onClick={handleSignOut} disabled={busy}>
         {busy ? 'Signing out…' : 'Sign out'}
