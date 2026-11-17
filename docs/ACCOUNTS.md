@@ -107,7 +107,7 @@ the under-18 consent method; add moderation for display names (this version bloc
 4. **Student onboarding** — **4a Stage 1 essentials ✅ built** (display name, date of birth, level, Terms/Privacy, guardian
    permission for under-18s); **4b Stage 2 data/API ✅ built** (private preferences table, GET, partial save, optional completion/skip endpoint, and website API client helpers).
    The website wizard is implemented with the current simple styles; the final visual restyle awaits the user's animation references. The additive migration has only been exercised by the isolated test suite; it has not been applied to the development or production database.
-5. Roles and protection — student onboarding routes now require the student role; admin and teacher route guards remain for their later features.
+5. Roles and protection — student onboarding routes now require the student role; the teacher and admin area guards are built (GET /api/teacher/ping for teachers and admins, GET /api/admin/ping for admins only; 401 when signed out, 403 for the wrong role). Roles can only be granted from the command line with npm run roles:grant -- <email> <role> --yes, and no web endpoint can grant or change roles. Real teacher and admin screens come with their later features.
 6. Account controls — JSON data export and sign out everywhere are built; account deletion remains pending its confirmation and data-retention rules.
 
 Google setup is done (see `docs/GOOGLE_SETUP.md`). Add the Client ID to `apps/api/.env` to switch sign-in on.
