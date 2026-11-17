@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "title": "Biology practice draft",
+  "sourceDocument": {
+    "title": "Biology class notes",
+    "rights": "unknown"
+  },
+  "questions": [
+    {
+      "referenceId": "page-2-question-1",
+      "exam": "jamb",
+      "origin": "generated_from_pdf",
+      "year": null,
+      "subject": "Biology",
+      "topic": "Cells",
+      "stem": "Which structure controls the activities of a cell?",
+      "options": [
+        { "label": "A", "text": "Cell wall" },
+        { "label": "B", "text": "Nucleus" },
+        { "label": "C", "text": "Cytoplasm" },
+        { "label": "D", "text": "Vacuole" }
+      ],
+      "answer": "B",
+      "explanation": "The nucleus contains genetic material and controls cell activities.",
+      "difficulty": 3,
+      "sourcePage": 2,
+      "reviewStatus": "pending"
+    }
+  ]
+}

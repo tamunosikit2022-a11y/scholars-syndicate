@@ -11,7 +11,8 @@
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate-cli.ts",
-    "db:reset": "tsx src/db/reset-cli.ts"
+    "db:reset": "tsx src/db/reset-cli.ts",
+    "questions:validate": "tsx scripts/validate-question-bank.ts"
   },
   "dependencies": {
     "@scholars/shared": "*",
