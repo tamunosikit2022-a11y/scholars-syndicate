@@ -2,7 +2,11 @@ import { z } from 'zod';
 
 export const QUESTION_PACK_SCHEMA_VERSION = 1 as const;
 export const QUESTION_EXAMS = ['jamb', 'waec', 'neco', 'post_utme'] as const;
-export const QUESTION_ORIGINS = ['past_question', 'teacher_authored', 'generated_from_pdf'] as const;
+export const QUESTION_ORIGINS = [
+  'past_question',
+  'teacher_authored',
+  'generated_from_pdf',
+] as const;
 export const QUESTION_RIGHTS = [
   'owned',
   'permission_granted',
@@ -25,10 +29,12 @@ export const questionBankQuestionSchema = z
     stem: z.string().trim().min(5).max(5000),
     options: z
       .array(
-        z.object({
-          label: optionLabel,
-          text: z.string().trim().min(1).max(2000),
-        }).strict(),
+        z
+          .object({
+            label: optionLabel,
+            text: z.string().trim().min(1).max(2000),
+          })
+          .strict(),
       )
       .min(2)
       .max(6),

@@ -55,7 +55,9 @@ async function main() {
   }
 
   const pack = result.data;
-  const verifiedCount = pack.questions.filter((question) => question.reviewStatus === 'verified').length;
+  const verifiedCount = pack.questions.filter(
+    (question) => question.reviewStatus === 'verified',
+  ).length;
   const pendingCount = pack.questions.length - verifiedCount;
   const rightsCleared = pack.sourceDocument.rights !== 'unknown';
   const readyCount = rightsCleared ? verifiedCount : 0;

@@ -46,7 +46,8 @@ describe('question bank JSON contract', () => {
       questions: [{ ...question, answer: 'E' }],
     });
     expect(result.success).toBe(false);
-    if (!result.success) expect(result.error.issues.map((issue) => issue.message)).toContain('answer_not_in_options');
+    if (!result.success)
+      expect(result.error.issues.map((issue) => issue.message)).toContain('answer_not_in_options');
   });
 
   it('rejects duplicate option labels, question references and repeated question text', () => {
@@ -57,7 +58,10 @@ describe('question bank JSON contract', () => {
         { label: 'A', text: 'Second choice' },
       ],
     };
-    const result = questionBankPackSchema.safeParse({ ...pack, questions: [repeated, { ...question }] });
+    const result = questionBankPackSchema.safeParse({
+      ...pack,
+      questions: [repeated, { ...question }],
+    });
     expect(result.success).toBe(false);
     if (!result.success) {
       const issues = result.error.issues.map((issue) => issue.message);
@@ -73,7 +77,10 @@ describe('question bank JSON contract', () => {
       questions: [{ ...question, origin: 'past_question', year: null }],
     });
     expect(result.success).toBe(false);
-    if (!result.success) expect(result.error.issues.map((issue) => issue.message)).toContain('past_question_year_required');
+    if (!result.success)
+      expect(result.error.issues.map((issue) => issue.message)).toContain(
+        'past_question_year_required',
+      );
   });
 
   it('requires reviewer details before a question can be marked verified', () => {
@@ -95,6 +102,9 @@ describe('question bank JSON contract', () => {
       sourceDocument: { title: 'Biology class notes', rights: 'licensed' },
     });
     expect(result.success).toBe(false);
-    if (!result.success) expect(result.error.issues.map((issue) => issue.message)).toContain('rights_evidence_required');
+    if (!result.success)
+      expect(result.error.issues.map((issue) => issue.message)).toContain(
+        'rights_evidence_required',
+      );
   });
 });
