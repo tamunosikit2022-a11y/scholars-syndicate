@@ -258,6 +258,49 @@ describe('delete my account', () => {
     expect(confirm.disabled).toBe(false);
   });
 
+  it('moves the cursor into the box and scrolls the form into view when it opens', async () => {
+    const original = Element.prototype.scrollIntoView;
+    const scrolled = vi.fn();
+    Element.prototype.scrollIntoView = scrolled;
+    try {
+      signedInServer();
+      await openAccount();
+      const input = await openDeleteForm();
+      expect(document.activeElement).toBe(input);
+      expect(scrolled).toHaveBeenCalledWith({ block: 'nearest' });
+    } finally {
+      Element.prototype.scrollIntoView = original; // leave the shared test browser as we found it
+    }
+  });
+
+  it('scrolls the form clear of the tab bar again when an error makes it taller', async () => {
+    const original = Element.prototype.scrollIntoView;
+    const scrolled = vi.fn();
+    Element.prototype.scrollIntoView = scrolled;
+    try {
+      signedInServer({
+        'POST /api/me/delete': () => json({ error: 'confirmation_incorrect' }, 422),
+      });
+      await openAccount();
+      fireEvent.change(await openDeleteForm(), { target: { value: 'delete' } });
+      const afterOpening = scrolled.mock.calls.length;
+      fireEvent.click(screen.getByRole('button', { name: 'Delete my account' }));
+      await screen.findByRole('alert');
+      await waitFor(() => expect(scrolled.mock.calls.length).toBe(afterOpening + 1));
+    } finally {
+      Element.prototype.scrollIntoView = original;
+    }
+  });
+
+  it('hands focus back to the opening button when the form is cancelled', async () => {
+    signedInServer();
+    await openAccount();
+    await openDeleteForm();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    const opener = screen.getByRole('button', { name: 'Delete my account' });
+    expect(document.activeElement).toBe(opener);
+  });
+
   it('closes on Cancel without telling the server anything', async () => {
     const server = signedInServer();
     await openAccount();
@@ -403,6 +446,22 @@ describe('welcome back after cancelling a deletion', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Got it' }));
     expect(screen.queryByText(/Your account deletion has been cancelled/)).toBeNull();
     expect(screen.getByRole('heading', { name: 'Welcome, Ada' })).toBeTruthy();
+  });
+
+  it('shows it on the Account screen too, when the address still ends in #account', async () => {
+    window.location.hash = '#account';
+    fakeServer({
+      ...signedOutRoutes(),
+      'POST /api/auth/google': () => json({ user: ada, isNewUser: false, deletionCancelled: true }),
+      'GET /api/me/journey': () => json({ journey }),
+    });
+    render(<App />);
+    await signInWithGoogle();
+
+    expect(await screen.findByRole('heading', { name: 'Your account' })).toBeTruthy();
+    expect(screen.getByText(/Your account deletion has been cancelled/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Got it' }));
+    expect(screen.queryByText(/Your account deletion has been cancelled/)).toBeNull();
   });
 
   it('says nothing about deletion on an ordinary sign-in', async () => {

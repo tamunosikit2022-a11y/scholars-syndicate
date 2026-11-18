@@ -47,6 +47,13 @@ filled buttons use dark text there. Dark mode follows the phone setting; there i
 4. **Quiet failures for optional extras.** If the journey cannot load, the home screen still works and shows no error.
 5. **Accessibility stays on:** visible focus, `prefers-reduced-motion` respected, headings in order (one `h1`), contrast as above.
 6. Keep `prefers-color-scheme` dark values for every new colour.
+7. **Nothing may hide behind the fixed tab bar.** `html { scroll-padding-bottom }` keeps anything the browser scrolls into view
+   (keyboard Tab, a jump to an error) clear of it. Anything that appears below the fold after a tap (a form, an error that makes a
+   form taller) must also be scrolled into view with `scrollIntoView({ block: 'nearest' })`, receive focus when it opens, and hand
+   focus back to the control that opened it when it closes.
+8. **Confirm every reversal on every signed-in screen.** The person may land on any tab, so a message that says something
+   important (for example "your account deletion has been cancelled") lives in a shared component (`WelcomeBackNotice`), never
+   inside one screen only.
 
 ## Checking it by eye
 

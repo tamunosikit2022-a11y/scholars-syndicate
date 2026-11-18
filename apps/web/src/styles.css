@@ -753,6 +753,11 @@ details.legal h3 {
 }
 
 /* ───────── Bottom tab bar ───────── */
+/* When the browser scrolls something into view (keyboard Tab, jump to an error, a tap target near the
+   bottom), keep it clear of the fixed tab bar instead of letting it land underneath it. */
+html {
+  scroll-padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+}
 .tabbar {
   position: fixed;
   right: 0;
@@ -850,6 +855,10 @@ details.legal h3 {
 .account-card .alert p,
 .account-card .status-ok {
   color: inherit;
+}
+/* keep a clear gap between an error message and the button under it (e.g. "Sign out and sign in again") */
+.account-card .alert p:not(:last-child) {
+  margin-bottom: 0.6rem;
 }
 .account-card .status-ok {
   color: var(--ok);
