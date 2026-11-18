@@ -1,12 +1,14 @@
 import {
   authConfigResponseSchema,
   accountExportSchema,
+  deleteAccountResponseSchema,
   healthResponseSchema,
   journeyResponseSchema,
   meResponseSchema,
   signInResponseSchema,
   type AuthConfigResponse,
   type AccountExport,
+  type DeleteAccountResponse,
   type EssentialsRequest,
   type HealthResponse,
   type JourneyRequest,
@@ -132,6 +134,17 @@ export async function exportMyData(): Promise<AccountExport> {
   const res = await call('/api/me/export');
   if (!res.ok) throw await errorFrom(res);
   return accountExportSchema.parse(await res.json());
+}
+
+/**
+ * Asks for the account to be deleted. The server locks it and signs out every device; it is erased
+ * for good after the grace period unless the person signs in again. Failures come back as ApiError:
+ * "confirmation_incorrect", "recent_sign_in_required" or "last_admin".
+ */
+export async function requestAccountDeletion(confirmation: string): Promise<DeleteAccountResponse> {
+  const res = await call('/api/me/delete', { method: 'POST', body: { confirmation } });
+  if (!res.ok) throw await errorFrom(res);
+  return deleteAccountResponseSchema.parse(await res.json());
 }
 
 /** Saves onboarding Stage 1. A rule failure comes back as ApiError("validation_failed") with `fields`. */

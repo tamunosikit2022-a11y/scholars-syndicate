@@ -1,12 +1,16 @@
+import { useEffect, useRef } from 'react';
 import { AuthProvider, useAuth } from './auth';
 import { OnboardingCard } from './OnboardingCard';
 import { JourneyWizard } from './JourneyWizard';
 import { SignInCard } from './SignInCard';
 import { SystemStatus } from './SystemStatus';
+import { AccountScreen } from './AccountScreen';
 import { HomeScreen } from './HomeScreen';
+import { TabBar } from './TabBar';
+import { useTab, type Tab } from './nav';
 import { messageForError } from './messages';
 
-function AuthGate() {
+function AuthGate({ tab }: { tab: Tab }) {
   const { state, recheck } = useAuth();
 
   switch (state.kind) {
@@ -39,7 +43,11 @@ function AuthGate() {
       if (state.user.roles.includes('student') && state.user.onboardingStage < 2) {
         return <JourneyWizard />;
       }
-      return <HomeScreen user={state.user} />;
+      return tab === 'account' ? (
+        <AccountScreen user={state.user} />
+      ) : (
+        <HomeScreen user={state.user} />
+      );
   }
 }
 
@@ -52,19 +60,33 @@ function isOnHome(state: ReturnType<typeof useAuth>['state']): boolean {
 
 function Shell() {
   const { state } = useAuth();
+  const tab = useTab();
   const onHome = isOnHome(state);
+
+  // When the person switches tab, move keyboard and screen-reader focus to the new screen's heading.
+  const previousTab = useRef(tab);
+  useEffect(() => {
+    if (previousTab.current === tab) return;
+    previousTab.current = tab;
+    if (!onHome) return;
+    document.getElementById(tab === 'account' ? 'account-title' : 'welcome-title')?.focus();
+  }, [tab, onHome]);
+
   return (
-    <main className={onHome ? 'page page-home' : 'page'}>
-      {/* The home screen carries its own banner and brand name, so the plain header is for the other screens. */}
-      {!onHome && (
-        <header>
-          <h1>Scholars Syndicate</h1>
-          <p className="tagline">Your guide from secondary school to university.</p>
-        </header>
-      )}
-      <AuthGate />
-      <SystemStatus />
-    </main>
+    <>
+      <main className={onHome ? 'page page-home' : 'page'}>
+        {/* The signed-in screens carry their own banner and brand name, so the plain header is for the others. */}
+        {!onHome && (
+          <header>
+            <h1>Scholars Syndicate</h1>
+            <p className="tagline">Your guide from secondary school to university.</p>
+          </header>
+        )}
+        <AuthGate tab={tab} />
+        {(!onHome || tab === 'home') && <SystemStatus />}
+      </main>
+      {onHome && <TabBar tab={tab} />}
+    </>
   );
 }
 

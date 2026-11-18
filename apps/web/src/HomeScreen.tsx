@@ -136,7 +136,7 @@ function JourneySection({ journey }: { journey: JourneyData }) {
 }
 
 export function HomeScreen({ user }: { user: PublicUser }) {
-  const { signOut } = useAuth();
+  const { state, signOut, dismissNotice } = useAuth();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isStudent = user.roles.includes('student');
@@ -163,7 +163,9 @@ export function HomeScreen({ user }: { user: PublicUser }) {
 
       <div className="home-body">
         <Avatar user={user} />
-        <h2 id="welcome-title">Welcome, {firstName(user)}</h2>
+        <h2 id="welcome-title" tabIndex={-1}>
+          Welcome, {firstName(user)}
+        </h2>
         <p className="home-email">
           <MailIcon size={16} />
           <span>{user.email}</span>
@@ -187,6 +189,18 @@ export function HomeScreen({ user }: { user: PublicUser }) {
           </p>
         )}
       </div>
+
+      {state.kind === 'signedIn' && state.notice === 'deletion_cancelled' && (
+        <div className="notice" role="status">
+          <p>
+            <strong>Welcome back!</strong> Your account deletion has been cancelled. Nothing was
+            lost.
+          </p>
+          <button type="button" className="btn-secondary" onClick={dismissNotice}>
+            Got it
+          </button>
+        </div>
+      )}
 
       {journey.kind === 'loading' && (
         <div className="home-skeleton" aria-busy="true" aria-label="Loading your journey" />

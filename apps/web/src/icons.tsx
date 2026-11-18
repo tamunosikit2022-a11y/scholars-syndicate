@@ -76,3 +76,53 @@ export function MailIcon({ size }: { size?: number }) {
     </Icon>
   );
 }
+
+export function HomeIcon({ size }: { size?: number }) {
+  return (
+    <Icon size={size}>
+      <path d="M3 11.5L12 4l9 7.5" />
+      <path d="M5.5 10v10h13V10" />
+      <path d="M10 20v-5.5h4V20" />
+    </Icon>
+  );
+}
+
+export function UserIcon({ size }: { size?: number }) {
+  return (
+    <Icon size={size}>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4.5 20.5c.8-3.6 3.8-5.5 7.5-5.5s6.7 1.9 7.5 5.5" />
+    </Icon>
+  );
+}
+
+export function DownloadIcon({ size }: { size?: number }) {
+  return (
+    <Icon size={size}>
+      <path d="M12 3.5v11" />
+      <path d="M7.5 10.5l4.5 4.5 4.5-4.5" />
+      <path d="M4.5 19.5h15" />
+    </Icon>
+  );
+}
+
+export function DevicesIcon({ size }: { size?: number }) {
+  return (
+    <Icon size={size}>
+      <rect x="2.5" y="5" width="13" height="9.5" rx="2" />
+      <path d="M6 18.5h6" />
+      <rect x="16.5" y="9" width="5" height="9.5" rx="1.5" />
+    </Icon>
+  );
+}
+
+export function TrashIcon({ size }: { size?: number }) {
+  return (
+    <Icon size={size}>
+      <path d="M4 7h16" />
+      <path d="M9.5 7V4.5h5V7" />
+      <path d="M6.5 7l1 13h9l1-13" />
+      <path d="M10 11v5.5M14 11v5.5" />
+    </Icon>
+  );
+}

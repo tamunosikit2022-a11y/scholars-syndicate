@@ -118,29 +118,31 @@ Design and decisions: `docs/ACCOUNTS.md`.
 | 4a   | Student onboarding, Stage 1 essentials (name, date of birth, level, Terms, guardian permission; 23 server + 18 website new tests) | ✅ built and tested; waiting for you to try it                                             |
 | 4b   | Onboarding Stage 2: private journey data/API and five-step student wizard                                                         | API/client/screens ✅; visual restyle and dev migration pending                            |
 | 5    | Roles and route protection                                                                                                        | student onboarding guard ✅ tested; teacher/admin guards built and tested; screens pending |
-| 6    | Account controls (sign out everywhere, export, delete)                                                                            | all three ✅ tested on the server; website screen waits for your design                    |
+| 6    | Account controls (sign out everywhere, export, delete)                                                                            | all three ✅ tested, server and website (Account tab)                                      |
 
 Open questions for later: how teachers are verified; the under-18 consent / parent flow (check NDPA); free email sending
 for notifications.
 
 ## Done log
 
-| Step   | What                                                  | Tested                                                             | Committed                               |
-| ------ | ----------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------- |
-| 0      | Old app review                                        | ✅                                                                 | n/a                                     |
-| 1      | Foundation (api + web + shared + database in code)    | ✅ mine, your laptop, CI                                           | ✅ pushed                               |
-| 1.1    | Security update 1 + Node 24 + audit gate in CI        | ✅ mine, your laptop, CI                                           | ✅ pushed                               |
-| 1.2    | Security update 2 (zod, body-parser)                  | ✅ mine, your laptop                                               | ✅ pushed                               |
-| 1.3*   | Security refresh: Vitest, TS ESLint, esbuild override | ✅ 120 server + 59 website tests, audit                            | ☐ you                                   |
-| F1.1   | Users and roles tables                                | ✅ mine, your laptop                                               | ✅ pushed                               |
-| F1.2   | Google sign-in on the server                          | ✅ mine, your laptop                                               | ✅ pushed                               |
-| F1.3   | Sign-in on the website                                | ✅ mine + your laptop with real Google                             | ☐ you (confirm pushed)                  |
-| F1.4a  | Onboarding Stage 1 (essentials)                       | ✅ 105 server + 54 website tests (mine)                            | ☐ you                                   |
-| F1.4b* | Stage 2 private journey API/client + five-step wizard | ✅ full suite: 120 API + 59 website tests; typecheck/lint/build ✅ | ☐ dev migration, visual references, you |
-| F1.5*  | Reusable role guard for student onboarding APIs       | ✅ 113 server + 57 website tests (mine)                            | ☐ you                                   |
-| F1.6a* | Account export + sign out everywhere                  | ✅ 118 server + 59 website tests (mine)                            | ☐ you                                   |
-| F2.1*  | Question bank JSON contract + read-only validator     | schema tests and sample pack added; full checks pending            | ☐ you                                   |
-| F1.6b* | Account deletion — server side only (no website)      | ✅ tests + checks (see notes below)                                | ☐ you (run `npm run db:migrate` first)  |
+| Step   | What                                                      | Tested                                                             | Committed                               |
+| ------ | --------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------- |
+| 0      | Old app review                                            | ✅                                                                 | n/a                                     |
+| 1      | Foundation (api + web + shared + database in code)        | ✅ mine, your laptop, CI                                           | ✅ pushed                               |
+| 1.1    | Security update 1 + Node 24 + audit gate in CI            | ✅ mine, your laptop, CI                                           | ✅ pushed                               |
+| 1.2    | Security update 2 (zod, body-parser)                      | ✅ mine, your laptop                                               | ✅ pushed                               |
+| 1.3*   | Security refresh: Vitest, TS ESLint, esbuild override     | ✅ 120 server + 59 website tests, audit                            | ☐ you                                   |
+| F1.1   | Users and roles tables                                    | ✅ mine, your laptop                                               | ✅ pushed                               |
+| F1.2   | Google sign-in on the server                              | ✅ mine, your laptop                                               | ✅ pushed                               |
+| F1.3   | Sign-in on the website                                    | ✅ mine + your laptop with real Google                             | ☐ you (confirm pushed)                  |
+| F1.4a  | Onboarding Stage 1 (essentials)                           | ✅ 105 server + 54 website tests (mine)                            | ☐ you                                   |
+| F1.4b* | Stage 2 private journey API/client + five-step wizard     | ✅ full suite: 120 API + 59 website tests; typecheck/lint/build ✅ | ☐ dev migration, visual references, you |
+| F1.5*  | Reusable role guard for student onboarding APIs           | ✅ 113 server + 57 website tests (mine)                            | ☐ you                                   |
+| F1.6a* | Account export + sign out everywhere                      | ✅ 118 server + 59 website tests (mine)                            | ☐ you                                   |
+| F2.1*  | Question bank JSON contract + read-only validator         | schema tests and sample pack added; full checks pending            | ☐ you                                   |
+| F1.6b* | Account deletion — server side only (no website)          | ✅ tests + checks (see notes below)                                | ☐ you (run `npm run db:migrate` first)  |
+| F1.8*  | Design foundation + new home/profile screen               | ✅ checked by eye (phone, dark, laptop); 78 website tests          | ✅ merged (PR #7)                       |
+| F1.9*  | Account tab: bottom tab bar, export, sign out all, delete | ✅ 104 website + 177 server tests; checked by eye                  | ☐ you (look at it, then merge)          |
 
 `F1.4b*` includes the five-screen onboarding wizard (location/school, exams, subjects, course/university interests, and study routine), partial saves, skip controls, and progress indication. The wizard is routed only to student accounts after Stage 1. The migration was applied by the isolated test suite to `scholars_test`; it has **not** been applied to the development or production database. The user's animation references are still pending, so the current presentation follows the existing simple mobile-first styles and can be restyled when they arrive.
 
@@ -156,3 +158,28 @@ Post-implementation review found and fixed a stale-session race that could roll 
 rights evidence and teacher review state. `npm run questions:validate -- <file.json>` validates a local pack only; it
 does not upload content or write to a database. The bundled sample has unknown rights and remains pending review.
 PDF text extraction, OCR, AI-provider choice and database import are still future work.
+
+`F1.8*` added the **design foundation and the new home screen**, following the owner's Dribbble reference (royal blue, purple
+honeycomb banner, lavender page). Tokens, building blocks and rules are in `docs/DESIGN.md`. The home screen
+(`apps/web/src/HomeScreen.tsx`) shows a **real** "journey X% set up" bar (8 saved answers) and five journey cards; empty items say
+"Not added yet"; if the journey cannot load nothing breaks. Logic is in `journeySummary.ts`; icons are inline SVG (`icons.tsx`).
+Checked by eye at phone width (light and dark) and laptop width, which found and fixed a bug the tests could not see (the banner
+painted over the avatar). Size: about +3 KB gzipped (JS 106.7 → 108.4 KB, CSS 1.7 → 3.1 KB). The sign-in, onboarding and wizard
+screens inherit the new colours, cards and buttons; their layouts are unchanged (a later restyle step).
+
+`F1.9*` added the **Account tab and the bottom tab bar** (website only; the server side was `F1.6b*`):
+
+- **Tab bar** (`TabBar.tsx`, `nav.ts`): Home and Account, kept in the address bar (`#home`, `#account`) so Back, refresh and links
+  work; focus moves to the new screen's heading; hidden while signed out or still onboarding; the system status panel stays on Home.
+- **Account screen** (`AccountScreen.tsx`): download my data (a file saved on the device; nothing is uploaded), sign out of all
+  devices, and delete my account (deliberate first click, then type `DELETE` or the email; the red button is disabled until
+  something is typed and cannot be pressed twice).
+- **Every error has a plain message** (`messageForDeletionError`): wrong confirmation, sign-in too old (with a "Sign out and sign in
+  again" button), the only administrator, no connection. A test checks every server error code has a message.
+- **After deleting:** the sign-in card says the date the account will be erased. **Signing in again** cancels it and the home screen
+  says "Welcome back! Your account deletion has been cancelled." (dismissible).
+- **Tests:** 25 new website tests (104 in total) plus 2 message tests; six protections were verified by deliberately breaking the
+  code (final button always enabled, no double-submit guard, not signed out after delete, cancel notice dropped, no focus move,
+  missing "sign in again" button): each break made a test fail.
+- **Not done / next:** editable home cards (open the wizard step), teacher review screen, student practice. The earlier plan to
+  show an email before erasure still needs free email sending.

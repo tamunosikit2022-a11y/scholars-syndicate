@@ -29,8 +29,14 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - name: Fail on any new high or critical vulnerability
+      # Block on anything that actually ships to students (production dependencies only).
+      - name: Fail on any new high or critical vulnerability in what we ship
+        run: npm audit --omit=dev --audit-level=high
+      # Build and test tools never reach users, and a fix may not exist yet (17 Nov 2026: picomatch, no patched
+      # release). Still report them, but do not let them hide the format, lint, type and test results below.
+      - name: Report vulnerabilities in build and test tools (does not block)
         run: npm audit --audit-level=high
+        continue-on-error: true
       - run: npm run format:check
       - run: npm run lint
       - run: npm run typecheck

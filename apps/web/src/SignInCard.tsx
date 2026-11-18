@@ -6,8 +6,19 @@ import { messageForError } from './messages';
 
 type Config = { kind: 'loading' } | { kind: 'ready'; clientId: string | null } | { kind: 'error' };
 
+const dayFormat = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+
+function formatDay(iso: string): string {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? iso : dayFormat.format(date);
+}
+
 export function SignInCard() {
-  const { signIn } = useAuth();
+  const { state, signIn } = useAuth();
   const [config, setConfig] = useState<Config>({ kind: 'loading' });
   const [attempt, setAttempt] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +51,12 @@ export function SignInCard() {
 
   return (
     <section className="card" aria-labelledby="signin-title">
+      {state.kind === 'signedOut' && state.notice?.kind === 'deletion_scheduled' && (
+        <p className="notice" role="status">
+          Your account is scheduled for deletion on {formatDay(state.notice.scheduledFor)}. Changed
+          your mind? Sign in again before then and it will be cancelled.
+        </p>
+      )}
       <h2 id="signin-title">Sign in</h2>
       <p>Continue with your Google account. We never see your Google password.</p>
 
