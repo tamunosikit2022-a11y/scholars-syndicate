@@ -26,6 +26,8 @@
   --tone-green-fg: #0a7d3b;
   --tone-purple-bg: #ece3fb;
   --tone-purple-fg: #5b21b6;
+  --tone-red-bg: #fde4e1;
+  --tone-red-fg: #b42318;
   color-scheme: light dark;
 }
 
@@ -53,6 +55,8 @@
     --tone-green-fg: #6ee79b;
     --tone-purple-bg: #32245a;
     --tone-purple-fg: #c4a8ff;
+    --tone-red-bg: #4a1f1f;
+    --tone-red-fg: #ff9a92;
   }
 }
 
@@ -489,7 +493,7 @@ details.legal h3 {
 }
 
 @media (prefers-color-scheme: dark) {
-  button:not(.btn-secondary):not(.btn-outline):not(.chip-remove) {
+  button:not(.btn-secondary):not(.btn-outline):not(.btn-danger-outline):not(.chip-remove) {
     color: #0c1022;
   }
 }
@@ -505,7 +509,8 @@ details.legal h3 {
 
 .page-home {
   max-width: 30rem;
-  padding: 0 0 max(1rem, env(safe-area-inset-bottom));
+  /* leaves room under the content for the fixed tab bar */
+  padding: 0 0 calc(5.5rem + env(safe-area-inset-bottom));
 }
 .page-home > .card {
   margin-inline: 1rem;
@@ -519,6 +524,9 @@ details.legal h3 {
 }
 .home > .home-progress,
 .home > .home-cards,
+.home > .notice,
+.home > .account-card,
+.home > .account-head,
 .home > .home-skeleton,
 .home > .home-note {
   margin-inline: 1rem;
@@ -742,4 +750,153 @@ details.legal h3 {
   .page-home .hero {
     border-radius: 1.75rem;
   }
+}
+
+/* ───────── Bottom tab bar ───────── */
+.tabbar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--surface);
+  box-shadow:
+    0 -1px 0 var(--border),
+    0 -8px 24px rgba(17, 26, 58, 0.06);
+}
+.tabbar ul {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+.tab {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  min-height: 3.5rem;
+  padding: 0.4rem 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.tab[aria-current='page'] {
+  color: var(--brand);
+}
+.tab[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 2rem;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--brand);
+}
+.tab:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: -3px;
+}
+
+/* ───────── Account screen ───────── */
+.hero-compact {
+  height: 6.5rem;
+}
+.hero-compact + .account-head {
+  margin-top: 1rem;
+}
+.account-head {
+  padding: 0 1rem;
+}
+.account-head h2 {
+  margin: 0;
+  font-size: 1.75rem;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+.account-head .meta {
+  margin: 0.25rem 0 0;
+  overflow-wrap: anywhere;
+}
+.home h2:focus {
+  outline: none; /* the heading is only focused by the app, after switching tabs */
+}
+
+.account-card {
+  padding: 1.1rem 1.25rem 1.25rem;
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+.account-card > * + * {
+  margin-top: 0.75rem;
+}
+.account-card h3 {
+  margin: 0.75rem 0 0;
+  font-size: 1.05rem;
+}
+.account-card p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+.account-card .alert p,
+.account-card .status-ok {
+  color: inherit;
+}
+.account-card .status-ok {
+  color: var(--ok);
+  font-weight: 600;
+}
+.account-card-danger {
+  border: 1px solid color-mix(in srgb, var(--bad) 35%, transparent);
+}
+.tone-red {
+  background: var(--tone-red-bg);
+  color: var(--tone-red-fg);
+}
+
+.btn-danger {
+  background: var(--bad);
+  color: #fff;
+}
+.btn-danger-outline {
+  background: var(--surface);
+  color: var(--bad);
+  border: 1.5px solid var(--bad);
+  border-radius: var(--radius-pill);
+  padding-inline: 1.5rem;
+}
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+/* ───────── Notices (welcome back, deletion scheduled) ───────── */
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-block: 0 1rem;
+  padding: 0.9rem 1.1rem;
+  background: var(--brand-soft);
+  border-radius: var(--radius-card);
+  color: var(--text);
+}
+.notice p {
+  margin: 0;
+}
+.home > .notice {
+  margin-top: 1rem;
 }

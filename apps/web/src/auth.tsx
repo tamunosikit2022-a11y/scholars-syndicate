@@ -8,12 +8,23 @@ import {
   type ReactNode,
 } from 'react';
 import type { PublicUser } from '@scholars/shared';
-import { ApiError, NetworkError, getMe, signInWithGoogle, signOutOnServer } from './api';
+import {
+  ApiError,
+  NetworkError,
+  getMe,
+  signInWithGoogle,
+  signOutEverywhere as signOutEverywhereOnServer,
+  signOutOnServer,
+} from './api';
+
+/** Shown once on the sign-in card after someone asked to delete their account. */
+export type SignedOutNotice = { kind: 'deletion_scheduled'; scheduledFor: string };
 
 export type AuthState =
   | { kind: 'loading' }
-  | { kind: 'signedOut' }
-  | { kind: 'signedIn'; user: PublicUser }
+  | { kind: 'signedOut'; notice?: SignedOutNotice }
+  /** `notice` is set when this sign-in cancelled a pending account deletion. */
+  | { kind: 'signedIn'; user: PublicUser; notice?: 'deletion_cancelled' }
   | { kind: 'unreachable' };
 
 export type SignInOutcome = { ok: true; isNewUser: boolean } | { ok: false; code: string };
@@ -24,6 +35,12 @@ interface AuthContextValue {
   signIn(idToken: string): Promise<SignInOutcome>;
   /** Returns false when the server could not be reached (the person stays signed in). */
   signOut(): Promise<boolean>;
+  /** Signs out every device at once. Returns false when the server could not be reached. */
+  signOutEverywhere(): Promise<boolean>;
+  /** The server accepted a deletion request: it already signed everyone out, so show the sign-in card. */
+  accountDeleted(scheduledFor: string): void;
+  /** Hides the "your deletion was cancelled" message. */
+  dismissNotice(): void;
   /** Asks the server again who is signed in (used by "Try again"). */
   recheck(): void;
   /** Replaces the signed-in person's details after the server saved a change (e.g. onboarding). */
@@ -50,7 +67,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(async (idToken: string): Promise<SignInOutcome> => {
     try {
       const result = await signInWithGoogle(idToken);
-      setState({ kind: 'signedIn', user: result.user });
+      setState({
+        kind: 'signedIn',
+        user: result.user,
+        ...(result.deletionCancelled ? { notice: 'deletion_cancelled' as const } : {}),
+      });
       return { ok: true, isNewUser: result.isNewUser };
     } catch (err) {
       if (err instanceof ApiError) return { ok: false, code: err.code };
@@ -69,18 +90,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const signOutEverywhere = useCallback(async () => {
+    try {
+      await signOutEverywhereOnServer();
+      setState({ kind: 'signedOut' });
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const accountDeleted = useCallback((scheduledFor: string) => {
+    setState({ kind: 'signedOut', notice: { kind: 'deletion_scheduled', scheduledFor } });
+  }, []);
+
+  const dismissNotice = useCallback(() => {
+    setState((prev) => (prev.kind === 'signedIn' ? { kind: 'signedIn', user: prev.user } : prev));
+  }, []);
+
   const recheck = useCallback(() => {
     setState({ kind: 'loading' });
     setAttempt((n) => n + 1);
   }, []);
 
   const updateUser = useCallback((user: PublicUser) => {
-    setState({ kind: 'signedIn', user });
+    // Keep any pending notice (e.g. "deletion cancelled") while the person finishes onboarding.
+    setState((prev) => (prev.kind === 'signedIn' ? { ...prev, user } : { kind: 'signedIn', user }));
   }, []);
 
   const value = useMemo(
-    () => ({ state, signIn, signOut, recheck, updateUser }),
-    [state, signIn, signOut, recheck, updateUser],
+    () => ({
+      state,
+      signIn,
+      signOut,
+      signOutEverywhere,
+      accountDeleted,
+      dismissNotice,
+      recheck,
+      updateUser,
+    }),
+    [state, signIn, signOut, signOutEverywhere, accountDeleted, dismissNotice, recheck, updateUser],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

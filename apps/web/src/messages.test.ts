@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { AUTH_ERROR_CODES } from '@scholars/shared';
-import { fieldMessage, messageForError } from './messages';
+import { ACCOUNT_DELETION_ERROR_CODES, AUTH_ERROR_CODES } from '@scholars/shared';
+import { fieldMessage, messageForDeletionError, messageForError } from './messages';
 
 describe('error messages', () => {
   const generic = messageForError('definitely-not-a-real-code');
@@ -18,6 +18,23 @@ describe('error messages', () => {
 
   it('never leaks internal codes to people', () => {
     for (const code of AUTH_ERROR_CODES) expect(messageForError(code)).not.toContain('_');
+  });
+});
+
+describe('account deletion messages', () => {
+  const generic = messageForError('definitely-not-a-real-code');
+
+  it('has a specific, human message for every deletion error the server can send', () => {
+    for (const code of ACCOUNT_DELETION_ERROR_CODES) {
+      expect(messageForDeletionError(code), code).not.toBe(generic);
+      expect(messageForDeletionError(code), code).not.toContain('_');
+    }
+  });
+
+  it('falls back to the general messages for shared errors, and safely for unknown ones', () => {
+    expect(messageForDeletionError('network')).toBe(messageForError('network'));
+    expect(messageForDeletionError('not_signed_in')).toMatch(/sign-in has expired/i);
+    expect(messageForDeletionError('brand_new_error')).toBe(generic);
   });
 });
 

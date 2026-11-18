@@ -1,4 +1,4 @@
-import { MIN_AGE } from '@scholars/shared';
+import { MIN_AGE, type AccountDeletionErrorCode } from '@scholars/shared';
 
 /** Plain-language messages for everything that can go wrong while signing in. */
 const MESSAGES: Record<string, string> = {
@@ -21,10 +21,27 @@ const MESSAGES: Record<string, string> = {
   onboarding_not_ready:
     'Please complete your account details before saving your learning preferences.',
   role_required: 'This part of your account is not available for your current role.',
+  not_signed_in: 'Your sign-in has expired. Please sign in again.',
 };
 
 export function messageForError(code: string): string {
   return MESSAGES[code] ?? 'Something went wrong. Please try again.';
+}
+
+/** Plain-language messages for everything that can go wrong while deleting an account. */
+const DELETION_MESSAGES: Record<AccountDeletionErrorCode, string> = {
+  confirmation_incorrect:
+    'That does not match. Type the word DELETE (in capital letters) or your own email address.',
+  recent_sign_in_required:
+    'For your safety, deleting an account needs a recent sign-in. Please sign in again, then try once more.',
+  last_admin:
+    'You are the only administrator, so this account cannot be deleted yet. Make another person an administrator first.',
+};
+
+export function messageForDeletionError(code: string): string {
+  return code in DELETION_MESSAGES
+    ? DELETION_MESSAGES[code as AccountDeletionErrorCode]
+    : messageForError(code);
 }
 
 const FIELD_MESSAGES: Record<string, Record<string, string>> = {

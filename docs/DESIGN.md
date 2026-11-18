@@ -26,14 +26,23 @@ filled buttons use dark text there. Dark mode follows the phone setting; there i
 - **Banner:** `.hero` — purple with a honeycomb pattern drawn as a ~550-byte inline SVG (no image download).
 - **Avatar:** `.home-avatar`, 92px, sits half on the banner. Needs `position: relative; z-index: 1` or the banner paints over it.
 - **Icons:** `apps/web/src/icons.tsx` — hand-drawn inline SVG line icons, decorative (`aria-hidden`).
+- **Tab bar:** `TabBar.tsx` / `.tabbar` — fixed to the bottom, Home and Account, `aria-current="page"` on the open tab, safe-area
+  padding for phones. The open tab lives in the address bar (`#home`, `#account`, see `nav.ts`) so Back, refresh and shared links work,
+  and focus moves to the new screen's heading when the tab changes. Add a tab only when its screen really exists.
+- **Account cards:** `.account-card` with an icon tile, a heading, one sentence and one action. The danger card uses `.tone-red`
+  and a red border; the dangerous action is `.btn-danger` (filled red) and only appears after a deliberate first click
+  (`.btn-danger-outline`), never as the first thing a person can tap.
+- **Notices:** `.notice` — a soft blue message with an optional "Got it" button, used for "Welcome back, deletion cancelled" and
+  "Your account is scheduled for deletion". Announced to screen readers with `role="status"`.
 - **Progress:** `.progress-track` / `.progress-fill`, exposed as `role="progressbar"` with `aria-valuenow`.
 
 ## Rules
 
 1. **Data-light.** No photos, icon libraries or web fonts without a clear reason. The system font stack is deliberate. Every
    addition to the first load is measured (this step added about 3 KB gzipped in total).
-2. **No dead controls.** Do not show a button, tab or card for something that does not exist yet (this is why the reference's
-   bottom tab bar and "Add details" buttons are not built yet).
+2. **No dead controls.** Do not show a button, tab or card for something that does not exist yet. (The reference's "Add details"
+   buttons are not built because the profile cannot be edited yet; its bottom tab bar appeared only once Account gave it two real
+   destinations.)
 3. **Honest numbers.** Progress and summaries come from real saved data, never placeholders.
 4. **Quiet failures for optional extras.** If the journey cannot load, the home screen still works and shows no error.
 5. **Accessibility stays on:** visible focus, `prefers-reduced-motion` respected, headings in order (one `h1`), contrast as above.
@@ -46,5 +55,5 @@ The website tests check structure and behaviour, not looks. To see a screen: bui
 
 ## Not designed yet
 
-Bottom tab bar (needs at least two real destinations), editable profile ("Add details"), the account screen (export, sign out
-everywhere, delete), restyle of the onboarding screens (they only inherit the new colours, cards and buttons for now).
+Editable profile ("Add details" on the home cards, reusing the journey wizard), teacher and admin screens (the question review
+screen first), and the restyle of the onboarding screens (they only inherit the new colours, cards and buttons for now).

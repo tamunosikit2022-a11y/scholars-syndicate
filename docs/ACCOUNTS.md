@@ -120,8 +120,15 @@ Decisions made together: a **14-day grace period**, a typed confirmation **plus 
 | --------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `POST /api/me/delete` | `202` `{ requestedAt, scheduledFor }` | `invalid_request` 400 · `not_signed_in` 401 · `recent_sign_in_required` 403 · `confirmation_incorrect` 422 · `last_admin` 409 · `forbidden_origin` 403 |
 
-The deletion-specific codes live in `ACCOUNT_DELETION_ERROR_CODES` (`packages/shared/src/account-deletion.ts`). **They have no
-plain-language messages on the website yet** — add them when the account screen is built.
+The deletion-specific codes live in `ACCOUNT_DELETION_ERROR_CODES` (`packages/shared/src/account-deletion.ts`). Their
+plain-language messages are in `apps/web/src/messages.ts` (`messageForDeletionError`), and a test checks that every code has one.
+
+**On the website (Account tab):** three cards — _Your data_ (downloads the export as a file on the device, nothing is uploaded),
+_Your devices_ (sign out everywhere) and _Delete my account_. Deleting needs a deliberate first click that reveals a box where the
+person types `DELETE` or their email; the red button stays disabled until something is typed and cannot be pressed twice. Each
+error has a plain message. If the sign-in is too old (`recent_sign_in_required`) the screen offers "Sign out and sign in again".
+After a successful request the person lands on the sign-in card, which says the date the account will be erased. Signing in again
+before then cancels it, and the home screen says "Welcome back! Your account deletion has been cancelled."
 
 **Special cases**
 
@@ -153,7 +160,7 @@ only the person's name link is removed. This was chosen on purpose (the question
    permission for under-18s); **4b Stage 2 data/API ✅ built** (private preferences table, GET, partial save, optional completion/skip endpoint, and website API client helpers).
    The website wizard is implemented with the current simple styles; the final visual restyle awaits the user's animation references. The additive migration has only been exercised by the isolated test suite; it has not been applied to the development or production database.
 5. Roles and protection — student onboarding routes now require the student role; the teacher and admin area guards are built (GET /api/teacher/ping for teachers and admins, GET /api/admin/ping for admins only; 401 when signed out, 403 for the wrong role). Roles can only be granted from the command line with npm run roles:grant -- <email> <role> --yes, and no web endpoint can grant or change roles. Real teacher and admin screens come with their later features.
-6. Account controls — JSON data export, sign out everywhere and **account deletion (server side)** are built and tested. The website
-   screen for these three is waiting for the owner's design (see "Account deletion" below).
+6. Account controls — JSON data export, sign out everywhere and account deletion are built and tested, on the server **and on the
+   website** (the Account tab; see "Account deletion" below).
 
 Google setup is done (see `docs/GOOGLE_SETUP.md`). Add the Client ID to `apps/api/.env` to switch sign-in on.
