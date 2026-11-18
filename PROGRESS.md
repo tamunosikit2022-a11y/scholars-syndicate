@@ -125,24 +125,25 @@ for notifications.
 
 ## Done log
 
-| Step   | What                                                      | Tested                                                             | Committed                               |
-| ------ | --------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------- |
-| 0      | Old app review                                            | ✅                                                                 | n/a                                     |
-| 1      | Foundation (api + web + shared + database in code)        | ✅ mine, your laptop, CI                                           | ✅ pushed                               |
-| 1.1    | Security update 1 + Node 24 + audit gate in CI            | ✅ mine, your laptop, CI                                           | ✅ pushed                               |
-| 1.2    | Security update 2 (zod, body-parser)                      | ✅ mine, your laptop                                               | ✅ pushed                               |
-| 1.3*   | Security refresh: Vitest, TS ESLint, esbuild override     | ✅ 120 server + 59 website tests, audit                            | ☐ you                                   |
-| F1.1   | Users and roles tables                                    | ✅ mine, your laptop                                               | ✅ pushed                               |
-| F1.2   | Google sign-in on the server                              | ✅ mine, your laptop                                               | ✅ pushed                               |
-| F1.3   | Sign-in on the website                                    | ✅ mine + your laptop with real Google                             | ☐ you (confirm pushed)                  |
-| F1.4a  | Onboarding Stage 1 (essentials)                           | ✅ 105 server + 54 website tests (mine)                            | ☐ you                                   |
-| F1.4b* | Stage 2 private journey API/client + five-step wizard     | ✅ full suite: 120 API + 59 website tests; typecheck/lint/build ✅ | ☐ dev migration, visual references, you |
-| F1.5*  | Reusable role guard for student onboarding APIs           | ✅ 113 server + 57 website tests (mine)                            | ☐ you                                   |
-| F1.6a* | Account export + sign out everywhere                      | ✅ 118 server + 59 website tests (mine)                            | ☐ you                                   |
-| F2.1*  | Question bank JSON contract + read-only validator         | schema tests and sample pack added; full checks pending            | ☐ you                                   |
-| F1.6b* | Account deletion — server side only (no website)          | ✅ tests + checks (see notes below)                                | ☐ you (run `npm run db:migrate` first)  |
-| F1.8*  | Design foundation + new home/profile screen               | ✅ checked by eye (phone, dark, laptop); 78 website tests          | ✅ merged (PR #7)                       |
-| F1.9*  | Account tab: bottom tab bar, export, sign out all, delete | ✅ 104 website + 177 server tests; checked by eye                  | ☐ you (look at it, then merge)          |
+| Step   | What                                                      | Tested                                                                                 | Committed                               |
+| ------ | --------------------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------- |
+| 0      | Old app review                                            | ✅                                                                                     | n/a                                     |
+| 1      | Foundation (api + web + shared + database in code)        | ✅ mine, your laptop, CI                                                               | ✅ pushed                               |
+| 1.1    | Security update 1 + Node 24 + audit gate in CI            | ✅ mine, your laptop, CI                                                               | ✅ pushed                               |
+| 1.2    | Security update 2 (zod, body-parser)                      | ✅ mine, your laptop                                                                   | ✅ pushed                               |
+| 1.3*   | Security refresh: Vitest, TS ESLint, esbuild override     | ✅ 120 server + 59 website tests, audit                                                | ☐ you                                   |
+| F1.1   | Users and roles tables                                    | ✅ mine, your laptop                                                                   | ✅ pushed                               |
+| F1.2   | Google sign-in on the server                              | ✅ mine, your laptop                                                                   | ✅ pushed                               |
+| F1.3   | Sign-in on the website                                    | ✅ mine + your laptop with real Google                                                 | ☐ you (confirm pushed)                  |
+| F1.4a  | Onboarding Stage 1 (essentials)                           | ✅ 105 server + 54 website tests (mine)                                                | ☐ you                                   |
+| F1.4b* | Stage 2 private journey API/client + five-step wizard     | ✅ full suite: 120 API + 59 website tests; typecheck/lint/build ✅                     | ☐ dev migration, visual references, you |
+| F1.5*  | Reusable role guard for student onboarding APIs           | ✅ 113 server + 57 website tests (mine)                                                | ☐ you                                   |
+| F1.6a* | Account export + sign out everywhere                      | ✅ 118 server + 59 website tests (mine)                                                | ☐ you                                   |
+| F2.1*  | Question bank JSON contract + read-only validator         | schema tests and sample pack added; full checks pending                                | ☐ you                                   |
+| F1.6b* | Account deletion — server side only (no website)          | ✅ tests + checks (see notes below)                                                    | ☐ you (run `npm run db:migrate` first)  |
+| F1.8*  | Design foundation + new home/profile screen               | ✅ checked by eye (phone, dark, laptop); 78 website tests                              | ✅ merged (PR #7)                       |
+| F1.9*  | Account tab: bottom tab bar, export, sign out all, delete | ✅ 104 website + 177 server tests; checked by eye                                      | ✅ merged (PR #8)                       |
+| F1.10* | Real-browser end-to-end test; 3 real bugs found and fixed | ✅ 19/19 real-browser checks, 0 accessibility findings; 177 server + 108 website tests | ☐ you (merge)                           |
 
 `F1.4b*` includes the five-screen onboarding wizard (location/school, exams, subjects, course/university interests, and study routine), partial saves, skip controls, and progress indication. The wizard is routed only to student accounts after Stage 1. The migration was applied by the isolated test suite to `scholars_test`; it has **not** been applied to the development or production database. The user's animation references are still pending, so the current presentation follows the existing simple mobile-first styles and can be restyled when they arrive.
 
@@ -183,3 +184,26 @@ screens inherit the new colours, cards and buttons; their layouts are unchanged 
   missing "sign in again" button): each break made a test fail.
 - **Not done / next:** editable home cards (open the wizard step), teacher review screen, student practice. The earlier plan to
   show an email before erasure still needs free email sending.
+
+`F1.10*` ran the whole product through a **real browser against the real server and database** (not mocks): real Chrome, the real
+built website, the real API and PostgreSQL, with a stand-in for Google's sign-in button and a clock that can be fast-forwarded
+(11 minutes for the "recent sign-in" rule, 15 days for the erase). **19 of 19 checks pass and the accessibility scan (axe: roles,
+labels, colour contrast) found nothing in 7 states, light and dark.** It covered: a visitor, real onboarding (both stages), the home
+screen, tab bar and Back/Forward, a real file download (name and contents, no secrets), two devices with "sign out everywhere",
+every delete outcome (wrong text, success, cancel by signing in, sign-in too old, erase after 14 days), a suspended person not
+escaping by deleting, the role guards, the whole question-review flow with the rights gate, no sideways scrolling at 320px, and
+keyboard focus. It found **three real bugs that the unit tests could not see**, all fixed here:
+
+1. **Focus and buttons hidden behind the tab bar.** Pressing Tab could scroll a button to the bottom edge, underneath the fixed
+   bar. Fixed with `scroll-padding-bottom` on the page.
+2. **The delete form opened out of sight.** After tapping "Delete my account" the confirmation form opened below the visible
+   area, partly under the tab bar, so it looked as if nothing had happened; an error message made it worse. Now the cursor moves
+   into the box, the form is scrolled clear of the bar (again when an error appears), and focus returns to the opening button on Cancel.
+3. **No confirmation that a deletion was cancelled.** Someone who deletes and signs straight back in lands on the screen the address
+   still points to (`#account`), where the "Welcome back, deletion cancelled" message did not exist, so they could think the deletion
+   was still going ahead. It is now one shared component shown on every signed-in screen (`WelcomeBackNotice`).
+
+Also tidied: spacing under an error message that has a button. Four new website tests (108 in total), each checked by deliberately
+removing its fix. The test rig itself is not part of the repository (it needs a downloaded browser); keeping it as an official
+end-to-end suite is a possible later step. **Still only checkable by a person:** the real Google sign-in screen, a real phone, and
+the real download in your own Chrome on Windows.

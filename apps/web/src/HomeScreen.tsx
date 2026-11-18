@@ -5,6 +5,7 @@ import { useAuth } from './auth';
 import { BookIcon, CalendarIcon, CapIcon, ClockIcon, MailIcon, SchoolIcon } from './icons';
 import { journeyCompletion, summaryCards, type CardIcon, type JourneyData } from './journeySummary';
 import { messageForError } from './messages';
+import { WelcomeBackNotice } from './WelcomeBackNotice';
 
 function firstName(user: PublicUser): string {
   return (user.displayName ?? user.fullName).trim().split(/\s+/)[0] ?? 'there';
@@ -136,7 +137,7 @@ function JourneySection({ journey }: { journey: JourneyData }) {
 }
 
 export function HomeScreen({ user }: { user: PublicUser }) {
-  const { state, signOut, dismissNotice } = useAuth();
+  const { signOut } = useAuth();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isStudent = user.roles.includes('student');
@@ -190,17 +191,7 @@ export function HomeScreen({ user }: { user: PublicUser }) {
         )}
       </div>
 
-      {state.kind === 'signedIn' && state.notice === 'deletion_cancelled' && (
-        <div className="notice" role="status">
-          <p>
-            <strong>Welcome back!</strong> Your account deletion has been cancelled. Nothing was
-            lost.
-          </p>
-          <button type="button" className="btn-secondary" onClick={dismissNotice}>
-            Got it
-          </button>
-        </div>
-      )}
+      <WelcomeBackNotice />
 
       {journey.kind === 'loading' && (
         <div className="home-skeleton" aria-busy="true" aria-label="Loading your journey" />

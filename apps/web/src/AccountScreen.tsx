@@ -1,10 +1,11 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { DELETION_GRACE_DAYS, type PublicUser } from '@scholars/shared';
 import { ApiError, NetworkError, exportMyData, requestAccountDeletion } from './api';
 import { useAuth } from './auth';
 import { saveJsonFile } from './download';
 import { CapIcon, DevicesIcon, DownloadIcon, TrashIcon } from './icons';
 import { messageForDeletionError, messageForError } from './messages';
+import { WelcomeBackNotice } from './WelcomeBackNotice';
 
 type Status =
   { kind: 'idle' } | { kind: 'busy' } | { kind: 'done' } | { kind: 'error'; text: string };
@@ -27,6 +28,28 @@ export function AccountScreen({ user }: { user: PublicUser }) {
   const [confirmation, setConfirmation] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [deleteCode, setDeleteCode] = useState<string | null>(null);
+
+  // Opening the form moves the cursor into it and scrolls the whole form clear of the tab bar (otherwise
+  // it can open below the visible area and look as if nothing happened). Closing it hands focus back to
+  // the button that opened it, so a keyboard or screen-reader user is not left nowhere.
+  const openerRef = useRef<HTMLButtonElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const confirmRef = useRef<HTMLInputElement>(null);
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (deleteOpen) {
+      wasOpen.current = true;
+      confirmRef.current?.focus({ preventScroll: true });
+      formRef.current?.scrollIntoView?.({ block: 'nearest' });
+    } else if (wasOpen.current) {
+      wasOpen.current = false;
+      openerRef.current?.focus();
+    }
+  }, [deleteOpen]);
+  // An error message makes the form taller: bring the buttons back above the tab bar.
+  useEffect(() => {
+    if (deleteCode) formRef.current?.scrollIntoView?.({ block: 'nearest' });
+  }, [deleteCode]);
 
   async function handleDownload() {
     setDownload({ kind: 'busy' });
@@ -84,6 +107,8 @@ export function AccountScreen({ user }: { user: PublicUser }) {
         </h2>
         <p className="meta">Signed in as {user.email}</p>
       </div>
+
+      <WelcomeBackNotice />
 
       <section className="account-card" aria-labelledby="data-title">
         <span className="tile tone-blue">
@@ -144,18 +169,24 @@ export function AccountScreen({ user }: { user: PublicUser }) {
         </p>
 
         {!deleteOpen && (
-          <button type="button" className="btn-danger-outline" onClick={() => setDeleteOpen(true)}>
+          <button
+            ref={openerRef}
+            type="button"
+            className="btn-danger-outline"
+            onClick={() => setDeleteOpen(true)}
+          >
             Delete my account
           </button>
         )}
 
         {deleteOpen && (
-          <form onSubmit={handleDelete} noValidate>
+          <form ref={formRef} onSubmit={handleDelete} noValidate>
             <div className="field">
               <label htmlFor="delete-confirmation">
                 To confirm, type DELETE or your email address
               </label>
               <input
+                ref={confirmRef}
                 id="delete-confirmation"
                 type="text"
                 value={confirmation}
