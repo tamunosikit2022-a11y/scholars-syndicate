@@ -1,6 +1,7 @@
 import cors from 'cors';
 import express, { type ErrorRequestHandler, type RequestHandler } from 'express';
 import helmet from 'helmet';
+import { rateLimit, ipKeyGenerator } from 'express-rate-limit';
 import { sameOriginGuard, sessionLoader } from './auth/middleware';
 import type { GoogleTokenVerifier } from './auth/google';
 import type { Db } from './db/client';
@@ -25,7 +26,28 @@ export interface AppDeps {
   trustProxy?: number;
   /** Sign-in attempts allowed per visitor IP. Generous, because a whole school can share one IP. */
   authRateLimit?: { windowMs: number; limit: number };
+  /** Overrides for the general limits below (tests use tiny ones). */
+  rateLimits?: Partial<RateLimits>;
 }
+
+interface Window {
+  windowMs: number;
+  limit: number;
+}
+export interface RateLimits {
+  /** Every request to /api from one IP. A safety net only: a whole school can share one IP. */
+  ip: Window;
+  /** Every request from one signed-in person, wherever they connect from. */
+  user: Window;
+  /** Expensive or destructive actions (export my data, delete my account, sign out everywhere). */
+  sensitive: Window;
+}
+const TEN_MINUTES = 10 * 60 * 1000;
+export const DEFAULT_RATE_LIMITS: RateLimits = {
+  ip: { windowMs: TEN_MINUTES, limit: 10_000 },
+  user: { windowMs: TEN_MINUTES, limit: 1_000 },
+  sensitive: { windowMs: TEN_MINUTES, limit: 30 },
+};
 
 const notFound: RequestHandler = (_req, res) => {
   res.status(404).json({ error: 'not_found' });
@@ -54,12 +76,35 @@ export function createApp(deps: AppDeps) {
   const clock = deps.clock ?? (() => new Date());
   const isProduction = deps.isProduction ?? false;
 
+  const limits: RateLimits = { ...DEFAULT_RATE_LIMITS, ...deps.rateLimits };
+  const limiter = (window: Window, options: Parameters<typeof rateLimit>[0] = {}) =>
+    rateLimit({
+      windowMs: window.windowMs,
+      limit: window.limit,
+      standardHeaders: 'draft-7',
+      legacyHeaders: false,
+      handler: (_req, res) => {
+        res.status(429).json({ error: 'too_many_requests' });
+      },
+      ...options,
+    });
+  // Limits that follow the signed-in person (not their IP), so one busy school connection is not locked
+  // out by a single student, and a stolen account cannot hammer the server from many places.
+  const perPerson = (req: express.Request) => req.auth?.user.id ?? ipKeyGenerator(req.ip ?? '');
+  const onlySignedIn = (req: express.Request) => !req.auth;
+
   app.set('trust proxy', deps.trustProxy ?? 0);
   app.use(helmet());
   app.use(cors({ origin: origins, credentials: true }));
+  // First line of defence, before any body is read or the database is touched.
+  app.use('/api', limiter(limits.ip));
   app.use(express.json({ limit: '100kb' }));
   app.use(sameOriginGuard(origins));
   app.use(sessionLoader({ db: deps.db, clock, isProduction }));
+  app.use('/api', limiter(limits.user, { skip: onlySignedIn, keyGenerator: perPerson }));
+  for (const path of ['/api/me/export', '/api/me/delete', '/api/auth/logout-all']) {
+    app.use(path, limiter(limits.sensitive, { skip: onlySignedIn, keyGenerator: perPerson }));
+  }
 
   app.use('/api/health', healthRouter({ db: deps.db, version: deps.version }));
   app.use(

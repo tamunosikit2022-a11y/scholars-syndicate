@@ -79,7 +79,8 @@ const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 /**
  * Extra protection against other websites making a signed-in browser send requests: any request that
- * changes data must either come from our own website or carry no Origin header at all (non-browser tools).
+ * changes data must either come from our own website or carry no Origin header at all (non-browser tools,
+ * unless the browser labels it cross-site).
  */
 export function sameOriginGuard(allowedOrigins: string[]): RequestHandler {
   const allowed = new Set(allowedOrigins);
@@ -87,6 +88,12 @@ export function sameOriginGuard(allowedOrigins: string[]): RequestHandler {
     if (SAFE_METHODS.has(req.method)) return next();
     const origin = req.get('origin');
     if (origin && !allowed.has(origin)) {
+      res.status(403).json({ error: 'forbidden_origin' });
+      return;
+    }
+    // Browsers always send an Origin on cross-site writes. If one arrives without it but the browser itself
+    // labels the request "cross-site", something is wrong: refuse it (a second lock behind SameSite cookies).
+    if (!origin && req.get('sec-fetch-site') === 'cross-site') {
       res.status(403).json({ error: 'forbidden_origin' });
       return;
     }
