@@ -66,6 +66,26 @@ describe('signed out', () => {
     await waitFor(() => expect(renderButton).toHaveBeenCalled());
   });
 
+  it('shows "loading" again while a retry is under way, and hides the error', async () => {
+    fakeServer(signedOutRoutes());
+    gsi.load.mockRejectedValueOnce(new Error('offline'));
+    let finishLoading: (value: unknown) => void = () => {};
+    gsi.load.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finishLoading = resolve;
+      }),
+    );
+    render(<App />);
+    expect(await screen.findByText(/could not load Google sign-in/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(await screen.findByText(/Loading Google sign-in/i)).toBeTruthy();
+    expect(screen.queryByText(/could not load Google sign-in/i)).toBeNull();
+    await act(async () => {
+      finishLoading({ initialize, renderButton, disableAutoSelect: vi.fn() });
+    });
+    await waitFor(() => expect(renderButton).toHaveBeenCalled());
+  });
+
   it('offers a retry when the sign-in settings cannot be fetched', async () => {
     let calls = 0;
     fakeServer({

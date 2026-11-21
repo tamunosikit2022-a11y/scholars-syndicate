@@ -20,7 +20,6 @@ export function GoogleButton({ clientId, onCredential }: Props) {
 
   useEffect(() => {
     let cancelled = false;
-    setStatus('loading');
     loadGoogleIdentity()
       .then((google) => {
         if (cancelled || !holder.current) return;
@@ -55,7 +54,13 @@ export function GoogleButton({ clientId, onCredential }: Props) {
       {status === 'failed' && (
         <div className="alert" role="alert">
           <p>We could not load Google sign-in. Check your internet connection.</p>
-          <button type="button" onClick={() => setAttempt((n) => n + 1)}>
+          <button
+            type="button"
+            onClick={() => {
+              setStatus('loading');
+              setAttempt((n) => n + 1);
+            }}
+          >
             Try again
           </button>
         </div>
