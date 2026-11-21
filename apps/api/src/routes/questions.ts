@@ -11,6 +11,7 @@ import {
 import { requireRole } from '../auth/middleware';
 import type { Db } from '../db/client';
 import { questionPacks, questionRevisions, questions } from '../db/schema';
+import { logStaffAction } from '../staff-actions';
 
 export interface QuestionRoutesDeps {
   db: Db;
@@ -163,6 +164,15 @@ export function adminQuestionPacksRouter(deps: QuestionRoutesDeps) {
           updatedAt: now,
         })),
       );
+
+      await logStaffAction(tx, {
+        actorId: auth.user.id,
+        action: 'pack.import',
+        targetType: 'pack',
+        targetId: created.id,
+        detail: { questionCount: pack.questions.length, rights: pack.sourceDocument.rights },
+        at: now,
+      });
       return created.id;
     });
 
@@ -189,16 +199,30 @@ export function adminQuestionPacksRouter(deps: QuestionRoutesDeps) {
       res.status(422).json({ error: 'validation_failed', issues: issuesOf(parsed.error) });
       return;
     }
-    const [updated] = await deps.db
-      .update(questionPacks)
-      .set({
-        rights: parsed.data.rights,
-        rightsEvidence: parsed.data.evidence,
-        rightsClearedBy: auth.user.id,
-        rightsClearedAt: deps.clock(),
-      })
-      .where(eq(questionPacks.id, id))
-      .returning({ id: questionPacks.id, rights: questionPacks.rights });
+    const now = deps.clock();
+    const updated = await deps.db.transaction(async (tx) => {
+      const [row] = await tx
+        .update(questionPacks)
+        .set({
+          rights: parsed.data.rights,
+          rightsEvidence: parsed.data.evidence,
+          rightsClearedBy: auth.user.id,
+          rightsClearedAt: now,
+        })
+        .where(eq(questionPacks.id, id))
+        .returning({ id: questionPacks.id, rights: questionPacks.rights });
+      if (row) {
+        await logStaffAction(tx, {
+          actorId: auth.user.id,
+          action: 'pack.rights',
+          targetType: 'pack',
+          targetId: row.id,
+          detail: { rights: row.rights },
+          at: now,
+        });
+      }
+      return row;
+    });
     if (!updated) {
       res.status(404).json({ error: 'not_found' });
       return;
@@ -349,6 +373,14 @@ export function teacherQuestionsRouter(deps: QuestionRoutesDeps) {
         note: input.note ?? null,
         createdAt: now,
       });
+      await logStaffAction(tx, {
+        actorId: auth.user.id,
+        action: 'question.edit',
+        targetType: 'question',
+        targetId: id,
+        detail: { fromVersion: current.version, toVersion: current.version + 1 },
+        at: now,
+      });
       return 'ok' as const;
     });
 
@@ -380,23 +412,36 @@ export function teacherQuestionsRouter(deps: QuestionRoutesDeps) {
       return;
     }
     const now = deps.clock();
-    const [updated] = await deps.db
-      .update(questions)
-      .set({
-        status: 'approved',
-        reviewedBy: auth.user.id,
-        reviewedAt: now,
-        rejectionReason: null,
-        updatedAt: now,
-      })
-      .where(
-        and(
-          eq(questions.id, id),
-          eq(questions.status, 'pending'),
-          eq(questions.version, parsed.data.expectedVersion),
-        ),
-      )
-      .returning({ id: questions.id });
+    const updated = await deps.db.transaction(async (tx) => {
+      const [row] = await tx
+        .update(questions)
+        .set({
+          status: 'approved',
+          reviewedBy: auth.user.id,
+          reviewedAt: now,
+          rejectionReason: null,
+          updatedAt: now,
+        })
+        .where(
+          and(
+            eq(questions.id, id),
+            eq(questions.status, 'pending'),
+            eq(questions.version, parsed.data.expectedVersion),
+          ),
+        )
+        .returning({ id: questions.id });
+      if (row) {
+        await logStaffAction(tx, {
+          actorId: auth.user.id,
+          action: 'question.approve',
+          targetType: 'question',
+          targetId: row.id,
+          detail: { version: parsed.data.expectedVersion },
+          at: now,
+        });
+      }
+      return row;
+    });
     if (!updated) {
       await refuse(deps.db, id, parsed.data.expectedVersion, res);
       return;
@@ -421,23 +466,36 @@ export function teacherQuestionsRouter(deps: QuestionRoutesDeps) {
       return;
     }
     const now = deps.clock();
-    const [updated] = await deps.db
-      .update(questions)
-      .set({
-        status: 'rejected',
-        reviewedBy: auth.user.id,
-        reviewedAt: now,
-        rejectionReason: parsed.data.reason,
-        updatedAt: now,
-      })
-      .where(
-        and(
-          eq(questions.id, id),
-          inArray(questions.status, ['pending', 'approved']),
-          eq(questions.version, parsed.data.expectedVersion),
-        ),
-      )
-      .returning({ id: questions.id });
+    const updated = await deps.db.transaction(async (tx) => {
+      const [row] = await tx
+        .update(questions)
+        .set({
+          status: 'rejected',
+          reviewedBy: auth.user.id,
+          reviewedAt: now,
+          rejectionReason: parsed.data.reason,
+          updatedAt: now,
+        })
+        .where(
+          and(
+            eq(questions.id, id),
+            inArray(questions.status, ['pending', 'approved']),
+            eq(questions.version, parsed.data.expectedVersion),
+          ),
+        )
+        .returning({ id: questions.id });
+      if (row) {
+        await logStaffAction(tx, {
+          actorId: auth.user.id,
+          action: 'question.reject',
+          targetType: 'question',
+          targetId: row.id,
+          detail: { version: parsed.data.expectedVersion, reason: parsed.data.reason },
+          at: now,
+        });
+      }
+      return row;
+    });
     if (!updated) {
       await refuse(deps.db, id, parsed.data.expectedVersion, res);
       return;

@@ -28,6 +28,8 @@ import {
   QUESTION_RIGHTS,
   QUESTION_STATUSES,
   ROLES,
+  STAFF_ACTIONS,
+  STAFF_TARGET_TYPES,
   STUDY_TIMES,
   type ExamPlan,
 } from '@scholars/shared';
@@ -300,4 +302,36 @@ export const questionRevisions = pgTable(
     createdAt: timestamptz('created_at').notNull().defaultNow(),
   },
   (t) => [unique('question_revisions_question_version_unique').on(t.questionId, t.version)],
+);
+
+// ---------- staff actions log (Step B, step 1) ----------
+
+/**
+ * Audit trail: who did what, to what, and when, for every staff action on the question bank.
+ * Rows are only ever added, never edited. targetId has no foreign key on purpose, so the record
+ * survives even if the pack or question is later erased. If the staff member's account is erased,
+ * actorId becomes empty but the record of what happened stays. `detail` holds small facts only
+ * (versions, counts, the rejection reason), never the question text or rights evidence.
+ */
+export const staffActions = pgTable(
+  'staff_actions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    actorId: uuid('actor_id').references(() => users.id, { onDelete: 'set null' }),
+    action: text('action').notNull(),
+    targetType: text('target_type').notNull(),
+    targetId: uuid('target_id').notNull(),
+    detail: jsonb('detail').$type<Record<string, string | number | null>>().notNull().default({}),
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+  },
+  (t) => [
+    check('staff_actions_action_valid', sql`${t.action} in (${sql.raw(quoted(STAFF_ACTIONS))})`),
+    check(
+      'staff_actions_target_type_valid',
+      sql`${t.targetType} in (${sql.raw(quoted(STAFF_TARGET_TYPES))})`,
+    ),
+    index('staff_actions_created_at_idx').on(t.createdAt),
+    index('staff_actions_target_idx').on(t.targetType, t.targetId),
+    index('staff_actions_actor_idx').on(t.actorId),
+  ],
 );

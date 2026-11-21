@@ -244,3 +244,18 @@ Tests: 4 new website tests (114 in total); two protections were verified by deli
 save, and the focus move): each made a test fail. Size unchanged (about 111 KB script, 3.6 KB styles, compressed).
 **Open for you:** try it on your own Chrome and, when possible, a phone. **Next:** Step B, the teacher review screen with the
 staff-actions log.
+
+`F2.2*` (**Step B, step 1**) adds the **staff-actions log** (server only, no screen yet). A new table `staff_actions`
+(migration `0007`) records who did what, to which pack or question, and when, for five actions: `pack.import`,
+`pack.rights`, `question.edit`, `question.approve`, `question.reject`. Each line is written **in the same database
+transaction as the action itself** (`apps/api/src/staff-actions.ts`), so an action can never happen without its record
+and a record can never exist for something that did not happen. Refused actions (wrong version, bad input, wrong role,
+unknown question) write nothing. Lines hold small facts only (versions, counts, rights status, the rejection reason),
+never question wording or rights evidence. There is no foreign key on the target, so the record survives if a pack or
+question is erased; if a staff account is erased, only the link to the person is cleared. Approve, reject and rights
+changes now run inside a transaction (they were single statements before); behaviour and responses are unchanged.
+Tests: 9 new server tests (202 in total) in `tests/staff-actions.test.ts`; two protections were verified by deliberately
+breaking the code (approve not logging; log written outside the transaction): each made a test fail. The second break
+was first NOT caught, so a stricter test was added. **Open for you:** run `npm run db:migrate` on `scholars_dev`.
+**Next:** Step B step 2, the teacher review screens (website). Note: `docs/SECURITY.md` still lists "no central log of
+staff actions" as a gap; update it when the log has a viewer.
