@@ -70,7 +70,9 @@ export type CardTone = 'blue' | 'pink' | 'orange' | 'green' | 'purple';
 export type CardIcon = 'school' | 'calendar' | 'book' | 'cap' | 'clock';
 
 export interface SummaryCard {
-  key: string;
+  key: 'school' | 'exams' | 'subjects' | 'course' | 'routine';
+  /** Which JourneyWizard step edits this card (0 to 4). */
+  step: number;
   title: string;
   /** null = the person has not added this yet. */
   value: string | null;
@@ -100,9 +102,10 @@ export function summaryCards(journey: JourneyData): SummaryCard[] {
     .join(' · ');
 
   return [
-    { key: 'school', title: 'School', value: place || null, tone: 'blue', icon: 'school' },
+    { key: 'school', step: 0, title: 'School', value: place || null, tone: 'blue', icon: 'school' },
     {
       key: 'exams',
+      step: 1,
       title: 'Exams',
       value: exams.length ? joinShort(exams, 3) : null,
       tone: 'pink',
@@ -110,6 +113,7 @@ export function summaryCards(journey: JourneyData): SummaryCard[] {
     },
     {
       key: 'subjects',
+      step: 2,
       title: 'Subjects',
       value: journey.subjects.length ? joinShort(journey.subjects, 4) : null,
       tone: 'orange',
@@ -117,6 +121,7 @@ export function summaryCards(journey: JourneyData): SummaryCard[] {
     },
     {
       key: 'course',
+      step: 3,
       title: 'Course and universities',
       value: course || null,
       tone: 'purple',
@@ -124,6 +129,7 @@ export function summaryCards(journey: JourneyData): SummaryCard[] {
     },
     {
       key: 'routine',
+      step: 4,
       title: 'Study routine',
       value: routine || null,
       tone: 'green',
