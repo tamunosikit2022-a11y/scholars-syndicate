@@ -44,7 +44,7 @@ them into an official test suite is a good later step. **Run the checklist below
   own (so limits are multiplied), and a restart resets them. If you scale out, move them to a shared store.
 - **Google is the only way in.** A student's or teacher's account is as safe as their Google account. Require
   2-step verification for every staff account.
-- **No central log of staff actions yet** (who cleared rights, who approved what is recorded per question).
+- **Staff actions are logged but cannot be viewed yet.** Imports, rights changes, edits, approvals and rejections are recorded in the `staff_actions` table in the same transaction as the action (migration 0007). There is no screen or report for reading it; add one before many staff use the system.
   Add one before many staff use the system.
 - **`/api/health` is public** and shows the version and database status. Fine for uptime monitors.
 - **Encryption at rest, backups and network isolation** depend on the hosting you choose (see checklist).

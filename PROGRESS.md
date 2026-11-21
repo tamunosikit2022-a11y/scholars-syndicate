@@ -104,7 +104,7 @@ The current full audit initially reported 13 moderate findings and no high or cr
 - Add display-name moderation (currently only bad characters and team look-alikes are blocked).
 - **Check on real phones** (Redmi/Tecno/Infinix + iPhone) — needs the app online first.
 - Choose free hosting before launch.
-- ESLint 9 shows an "unsupported" notice (ESLint 10 exists) — upgrade later, not a vulnerability.
+- ✅ ESLint upgraded to 10 with react-hooks 7 (PR #22, 21 Nov 2026).
 
 ## Feature 1 — Accounts & access (in progress)
 
@@ -143,9 +143,11 @@ for notifications.
 | F1.6b* | Account deletion — server side only (no website)          | ✅ tests + checks (see notes below)                                                            | ☐ you (run `npm run db:migrate` first)  |
 | F1.8*  | Design foundation + new home/profile screen               | ✅ checked by eye (phone, dark, laptop); 78 website tests                                      | ✅ merged (PR #7)                       |
 | F1.9*  | Account tab: bottom tab bar, export, sign out all, delete | ✅ 104 website + 177 server tests; checked by eye                                              | ✅ merged (PR #8)                       |
-| F1.10* | Real-browser end-to-end test; 3 real bugs found and fixed | ✅ 19/19 real-browser checks, 0 accessibility findings; 177 server + 108 website tests         | ☐ you (merge)                           |
-| F1.11* | Security audit and hardening (attack-tested)              | ✅ 193 server + 110 website tests; 50 live attack checks, 0 failures; strict CSP, 0 violations | ☐ you (merge, then the checklist)       |
-| F1.12  | Editable home cards (Step A)                              | ✅ 114 website tests (4 new); server untouched; real-phone/Chrome check still yours            | ☐ you (merge)                           |
+| F1.10* | Real-browser end-to-end test; 3 real bugs found and fixed | ✅ 19/19 real-browser checks, 0 accessibility findings; 177 server + 108 website tests         | ✅ merged (PR #9)                       |
+| F1.11* | Security audit and hardening (attack-tested)              | ✅ 193 server + 110 website tests; 50 live attack checks, 0 failures; strict CSP, 0 violations | ✅ merged (PR #10); checklist is yours  |
+| F1.12  | Editable home cards (Step A)                              | ✅ 114 website tests (4 new); server untouched; real-phone/Chrome check still yours            | ✅ merged (PR #18)                      |
+| F2.2*  | Staff-actions log (Step B1, server only)                  | ✅ 202 server tests; log written in the same transaction                                       | ✅ merged (PR #21)                      |
+| T1     | ESLint 10 with react-hooks 7                              | ✅ 115 website tests; 0 vulnerabilities                                                        | ✅ merged (PR #22)                      |
 
 `F1.4b*` includes the five-screen onboarding wizard (location/school, exams, subjects, course/university interests, and study routine), partial saves, skip controls, and progress indication. The wizard is routed only to student accounts after Stage 1. The migration was applied by the isolated test suite to `scholars_test`; it has **not** been applied to the development or production database. The user's animation references are still pending, so the current presentation follows the existing simple mobile-first styles and can be restyled when they arrive.
 
