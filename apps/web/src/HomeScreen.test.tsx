@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { PublicUser } from '@scholars/shared';
 import App from './App';
@@ -151,5 +151,79 @@ describe('home screen (signed in, onboarding finished)', () => {
     fakeServer(homeRoutes(ada, journeyOf(emptyJourney)));
     render(<App />);
     expect(await screen.findByText('Connected — everything is working.')).toBeTruthy();
+  });
+});
+
+describe('home cards open the matching step', () => {
+  const putCalls = (server: ReturnType<typeof fakeServer>) =>
+    server.mock.calls.filter(([url, init]) => url === '/api/me/journey' && init?.method === 'PUT');
+
+  it('offers Add on an empty card and Edit on a filled one', async () => {
+    fakeServer(homeRoutes(ada, journeyOf({ ...emptyJourney, subjects: ['English'] })));
+    render(<App />);
+    expect(await screen.findByRole('button', { name: 'Add school' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Edit subjects' })).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: /^Add / })).toHaveLength(4);
+  });
+
+  it('opens only the chosen step, saves it, returns home and updates the progress bar', async () => {
+    const server = fakeServer({
+      ...homeRoutes(ada, journeyOf(emptyJourney)),
+      'PUT /api/me/journey': () =>
+        json({ journey: { ...emptyJourney, exams: [{ type: 'jamb', date: null }] } }),
+    });
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Add exams' }));
+
+    const heading = await screen.findByRole('heading', { name: 'Update: Exams' });
+    await waitFor(() => expect(document.activeElement).toBe(heading));
+    // Not the onboarding flow: no step counter, no Skip, no Back, never finishes onboarding.
+    expect(screen.queryByText(/Step \d of 5/)).toBeNull();
+    expect(screen.queryByRole('button', { name: /Skip/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Back' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'JAMB' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(await screen.findByText('Your journey is 13% set up')).toBeTruthy();
+    const body = JSON.parse(String(putCalls(server)[0]?.[1]?.body));
+    expect(body).toEqual({ exams: [{ type: 'jamb', date: null }] });
+    expect(server.mock.calls.some(([url]) => String(url).includes('/complete'))).toBe(false);
+    expect(screen.getByText('JAMB')).toBeTruthy();
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Edit exams' })),
+    );
+  });
+
+  it('Cancel changes nothing and saves nothing', async () => {
+    const server = fakeServer(homeRoutes(ada, journeyOf(emptyJourney)));
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Add subjects' }));
+    await screen.findByRole('heading', { name: 'Update: Subjects' });
+    fireEvent.change(screen.getByLabelText('Subjects'), { target: { value: 'Physics' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(await screen.findByText('Your journey is 0% set up')).toBeTruthy();
+    expect(putCalls(server)).toHaveLength(0);
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Add subjects' })),
+    );
+  });
+
+  it('keeps the person on the step with a plain message when saving fails', async () => {
+    fakeServer({
+      ...homeRoutes(ada, journeyOf(emptyJourney)),
+      'PUT /api/me/journey': () => json({ error: 'internal_error' }, 500),
+    });
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Add study routine' }));
+    await screen.findByRole('heading', { name: 'Update: Study routine' });
+    fireEvent.change(screen.getByLabelText('Daily study goal (minutes)'), {
+      target: { value: '45' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(await screen.findByRole('alert')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Update: Study routine' })).toBeTruthy();
   });
 });

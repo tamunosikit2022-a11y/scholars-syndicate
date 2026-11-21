@@ -690,6 +690,15 @@ details.legal h3 {
 .card-value-empty {
   color: var(--muted);
 }
+.card-action {
+  margin-top: 0.7rem;
+  min-height: 2.75rem;
+  padding-inline: 1.1rem;
+  font-size: 0.875rem;
+}
+.home-editing {
+  padding: 1rem;
+}
 
 .tile {
   display: grid;

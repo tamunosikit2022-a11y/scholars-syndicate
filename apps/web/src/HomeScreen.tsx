@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { PublicUser } from '@scholars/shared';
 import { getJourney } from './api';
 import { useAuth } from './auth';
 import { BookIcon, CalendarIcon, CapIcon, ClockIcon, MailIcon, SchoolIcon } from './icons';
 import { journeyCompletion, summaryCards, type CardIcon, type JourneyData } from './journeySummary';
 import { messageForError } from './messages';
+import { JourneyWizard } from './JourneyWizard';
 import { WelcomeBackNotice } from './WelcomeBackNotice';
 
 function firstName(user: PublicUser): string {
@@ -72,8 +73,10 @@ const ICONS: Record<CardIcon, () => React.JSX.Element> = {
 type JourneyState =
   { kind: 'loading' } | { kind: 'ready'; journey: JourneyData } | { kind: 'unavailable' };
 
+type SetJourney = (journey: JourneyData) => void;
+
 /** Loads the student's own journey. Any failure just hides the journey section: the home screen still works. */
-function useJourney(enabled: boolean): JourneyState {
+function useJourney(enabled: boolean): [JourneyState, SetJourney] {
   const [state, setState] = useState<JourneyState>(
     enabled ? { kind: 'loading' } : { kind: 'unavailable' },
   );
@@ -87,10 +90,18 @@ function useJourney(enabled: boolean): JourneyState {
       });
     return () => controller.abort();
   }, [enabled]);
-  return state;
+  return [state, (journey) => setState({ kind: 'ready', journey })];
 }
 
-function JourneySection({ journey }: { journey: JourneyData }) {
+function JourneySection({
+  journey,
+  onEdit,
+  buttonRefs,
+}: {
+  journey: JourneyData;
+  onEdit: (step: number) => void;
+  buttonRefs: React.RefObject<Map<number, HTMLButtonElement>>;
+}) {
   const { percent } = journeyCompletion(journey);
   const complete = percent === 100;
   return (
@@ -128,6 +139,18 @@ function JourneySection({ journey }: { journey: JourneyData }) {
               <p className={card.value ? 'card-value' : 'card-value card-value-empty'}>
                 {card.value ?? 'Not added yet'}
               </p>
+              <button
+                type="button"
+                className="btn-secondary card-action"
+                aria-label={`${card.value ? 'Edit' : 'Add'} ${card.title.toLowerCase()}`}
+                ref={(node) => {
+                  if (node) buttonRefs.current.set(card.step, node);
+                  else buttonRefs.current.delete(card.step);
+                }}
+                onClick={() => onEdit(card.step)}
+              >
+                {card.value ? 'Edit' : 'Add'}
+              </button>
             </li>
           );
         })}
@@ -141,7 +164,38 @@ export function HomeScreen({ user }: { user: PublicUser }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isStudent = user.roles.includes('student');
-  const journey = useJourney(isStudent);
+  const [journey, setJourney] = useJourney(isStudent);
+  const [editingStep, setEditingStep] = useState<number | null>(null);
+  const buttonRefs = useRef(new Map<number, HTMLButtonElement>());
+  const lastStep = useRef<number | null>(null);
+
+  // Back on the home screen after saving or cancelling: return focus to the card that was opened.
+  useEffect(() => {
+    if (editingStep !== null || lastStep.current === null) return;
+    const step = lastStep.current;
+    lastStep.current = null;
+    buttonRefs.current.get(step)?.focus();
+  }, [editingStep]);
+
+  function openEditor(step: number) {
+    lastStep.current = step;
+    setEditingStep(step);
+  }
+
+  if (editingStep !== null && journey.kind === 'ready') {
+    return (
+      <section className="home home-editing">
+        <JourneyWizard
+          onlyStep={editingStep}
+          onCancel={() => setEditingStep(null)}
+          onSaved={(saved) => {
+            setJourney(saved);
+            setEditingStep(null);
+          }}
+        />
+      </section>
+    );
+  }
 
   async function handleSignOut() {
     setBusy(true);
@@ -196,7 +250,9 @@ export function HomeScreen({ user }: { user: PublicUser }) {
       {journey.kind === 'loading' && (
         <div className="home-skeleton" aria-busy="true" aria-label="Loading your journey" />
       )}
-      {journey.kind === 'ready' && <JourneySection journey={journey.journey} />}
+      {journey.kind === 'ready' && (
+        <JourneySection journey={journey.journey} onEdit={openEditor} buttonRefs={buttonRefs} />
+      )}
 
       <p className="home-note">More learning features are on the way.</p>
     </section>

@@ -336,10 +336,27 @@ function StepFields(props: {
   );
 }
 
-export function JourneyWizard() {
+/** The wizard step that edits each home card. */
+export const STEP_TITLES = STEPS;
+
+/**
+ * Two ways to use the wizard. With no props it is the Stage 2 flow (five steps, skippable, finishing
+ * onboarding). With `onlyStep` it edits that one step from the home screen: Save returns to home,
+ * Cancel leaves everything as it was, and onboarding is never touched.
+ */
+export function JourneyWizard({
+  onlyStep,
+  onSaved,
+  onCancel,
+}: {
+  onlyStep?: number;
+  onSaved?: (journey: Journey) => void;
+  onCancel?: () => void;
+} = {}) {
   const { recheck } = useAuth();
+  const editing = onlyStep !== undefined;
   const [journey, setJourney] = useState<Journey>(emptyJourney);
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(onlyStep ?? 0);
   const [pendingSubject, setPendingSubject] = useState('');
   const [pendingUniversity, setPendingUniversity] = useState('');
   const [loadAttempt, setLoadAttempt] = useState(0);
@@ -370,6 +387,14 @@ export function JourneyWizard() {
       });
     return () => controller.abort();
   }, [loadAttempt, recheck]);
+
+  // Opened from the home screen: move focus to the heading so the change is announced and visible.
+  useEffect(() => {
+    if (!editing || !loaded) return;
+    const heading = document.getElementById('journey-title');
+    heading?.focus();
+    heading?.scrollIntoView?.({ block: 'start' });
+  }, [editing, loaded]);
 
   function update(patch: Partial<Journey>) {
     setError(null);
@@ -447,6 +472,10 @@ export function JourneyWizard() {
     try {
       const saved = await saveJourney(parsed.data);
       setJourney(saved.journey);
+      if (editing) {
+        onSaved?.(saved.journey);
+        return;
+      }
       if (step === STEPS.length - 1) {
         await completeJourney();
         recheck();
@@ -498,10 +527,17 @@ export function JourneyWizard() {
   if (loadError) {
     return (
       <section className="card" aria-labelledby="journey-title">
-        <h2 id="journey-title">Personalise your journey</h2>
+        <h2 id="journey-title" tabIndex={-1}>
+          {editing ? `Update: ${STEPS[step]}` : 'Personalise your journey'}
+        </h2>
         <p className="alert" role="alert">
           {loadError}
         </p>
+        {editing && (
+          <button className="btn-secondary" type="button" onClick={onCancel}>
+            Back to home
+          </button>
+        )}
         <button
           type="button"
           onClick={() => {
@@ -518,23 +554,29 @@ export function JourneyWizard() {
 
   return (
     <section className="card" aria-labelledby="journey-title">
-      <p className="eyebrow">Stage 2 of 3</p>
-      <h2 id="journey-title">Personalise your journey</h2>
-      <p>Optional details help us shape useful study guidance for you. You can skip any step.</p>
+      <p className="eyebrow">{editing ? 'Your journey' : 'Stage 2 of 3'}</p>
+      <h2 id="journey-title" tabIndex={-1}>
+        {editing ? `Update: ${STEPS[step]}` : 'Personalise your journey'}
+      </h2>
+      {!editing && (
+        <p>Optional details help us shape useful study guidance for you. You can skip any step.</p>
+      )}
 
-      <div className="journey-progress">
-        <div className="step-label">
-          <span>
-            Step {step + 1} of {STEPS.length}
-          </span>
-          <span>{STEPS[step]}</span>
+      {!editing && (
+        <div className="journey-progress">
+          <div className="step-label">
+            <span>
+              Step {step + 1} of {STEPS.length}
+            </span>
+            <span>{STEPS[step]}</span>
+          </div>
+          <progress
+            value={step + 1}
+            max={STEPS.length}
+            aria-label={`Step ${step + 1} of ${STEPS.length}`}
+          />
         </div>
-        <progress
-          value={step + 1}
-          max={STEPS.length}
-          aria-label={`Step ${step + 1} of ${STEPS.length}`}
-        />
-      </div>
+      )}
 
       <form onSubmit={onContinue} noValidate>
         <StepFields
@@ -567,7 +609,12 @@ export function JourneyWizard() {
         )}
 
         <div className="journey-actions">
-          {step > 0 && (
+          {editing && (
+            <button className="btn-secondary" type="button" disabled={busy} onClick={onCancel}>
+              Cancel
+            </button>
+          )}
+          {!editing && step > 0 && (
             <button
               className="btn-secondary"
               type="button"
@@ -577,11 +624,19 @@ export function JourneyWizard() {
               Back
             </button>
           )}
-          <button className="btn-secondary" type="button" disabled={busy} onClick={skip}>
-            {busy ? 'Saving…' : step === STEPS.length - 1 ? 'Finish for now' : 'Skip this step'}
-          </button>
+          {!editing && (
+            <button className="btn-secondary" type="button" disabled={busy} onClick={skip}>
+              {busy ? 'Saving…' : step === STEPS.length - 1 ? 'Finish for now' : 'Skip this step'}
+            </button>
+          )}
           <button type="submit" disabled={busy}>
-            {busy ? 'Saving…' : step === STEPS.length - 1 ? 'Save and finish' : 'Continue'}
+            {busy
+              ? 'Saving…'
+              : editing
+                ? 'Save'
+                : step === STEPS.length - 1
+                  ? 'Save and finish'
+                  : 'Continue'}
           </button>
         </div>
       </form>

@@ -145,6 +145,7 @@ for notifications.
 | F1.9*  | Account tab: bottom tab bar, export, sign out all, delete | ✅ 104 website + 177 server tests; checked by eye                                              | ✅ merged (PR #8)                       |
 | F1.10* | Real-browser end-to-end test; 3 real bugs found and fixed | ✅ 19/19 real-browser checks, 0 accessibility findings; 177 server + 108 website tests         | ☐ you (merge)                           |
 | F1.11* | Security audit and hardening (attack-tested)              | ✅ 193 server + 110 website tests; 50 live attack checks, 0 failures; strict CSP, 0 violations | ☐ you (merge, then the checklist)       |
+| F1.12  | Editable home cards (Step A)                              | ✅ 114 website tests (4 new); server untouched; real-phone/Chrome check still yours            | ☐ you (merge)                           |
 
 `F1.4b*` includes the five-screen onboarding wizard (location/school, exams, subjects, course/university interests, and study routine), partial saves, skip controls, and progress indication. The wizard is routed only to student accounts after Stage 1. The migration was applied by the isolated test suite to `scholars_test`; it has **not** been applied to the development or production database. The user's animation references are still pending, so the current presentation follows the existing simple mobile-first styles and can be restyled when they arrive.
 
@@ -232,3 +233,14 @@ incident steps), CI with read-only permissions and **pinned** third-party action
 checklist in `docs/SECURITY.md` (HTTPS hosting, production settings, database isolation and backups, Google origin and client secret,
 GitHub two-factor and security features, the lawyer). The live-attack and browser test rigs are not committed (they need a downloaded
 browser); making them an official end-to-end suite is a good later step.
+
+`F1.12` (**Step A**) makes the five home cards **editable**. Each card now has an **Add** button (nothing saved yet) or an **Edit**
+button (something saved), named for screen readers, for example "Add exams". It opens just that one step of the journey wizard,
+titled "Update: Exams". There is no step counter, no Skip and no Back, and saving never touches onboarding. **Save** stores the
+step, returns to Home and the progress bar and card update at once; **Cancel** leaves everything as it was. Focus moves to the
+heading when the step opens and goes back to the card's button afterwards. The wizard is the same component as onboarding
+(`JourneyWizard`, new optional `onlyStep`), so the fields and server checks are identical. No server change and no new route.
+Tests: 4 new website tests (114 in total); two protections were verified by deliberately removing them (the return-to-home after
+save, and the focus move): each made a test fail. Size unchanged (about 111 KB script, 3.6 KB styles, compressed).
+**Open for you:** try it on your own Chrome and, when possible, a phone. **Next:** Step B, the teacher review screen with the
+staff-actions log.
