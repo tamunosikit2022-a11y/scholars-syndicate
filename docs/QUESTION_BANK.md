@@ -1,8 +1,9 @@
 # Question bank generation and import
 
-The rebuild does not yet contain a question database or a PDF-to-question AI provider. The old question tables were
-not defined in the old repository, so this first step establishes a portable JSON format without changing or clearing
-any database.
+The rebuild has a question database and a server-side import, review and rights workflow (admins import packs; teachers
+and admins edit, approve and reject; every action is recorded in the staff-actions log). It does not yet have screens for
+that workflow, a PDF-to-question AI provider, or student practice. The old question tables were not defined in the old
+repository, so questions enter only through the portable JSON format below.
 
 ## Current workflow
 
@@ -11,8 +12,9 @@ any database.
 2. Run `npm run questions:validate -- path/to/question-pack.json` from the project root.
 3. Review every answer, explanation, source page and right to use the source. Keep generated questions in `pending`
    review until a teacher has checked them.
-4. Importing questions into the application is not implemented yet. Only questions with documented source rights and
-   teacher verification should be eligible for a future publish/import workflow.
+4. An admin imports the pack through `POST /api/admin/question-packs` (there is no import screen yet). Every question
+   enters as `pending`, whatever the file says. Only questions that are approved by a teacher **and** have known source
+   rights are publishable.
 
 The validator only reads the selected JSON file. It does not send it to a service, write files, call an AI provider or
 change the database. It reports structural issues, duplicate references/questions, answer keys that do not match an
